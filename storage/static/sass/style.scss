@@ -1,3 +1,7 @@
+@import "~bootstrap/dist/css/bootstrap.css";
+@import "~bootstrap-vue/dist/bootstrap-vue.css";
+@import '~vue-full-screen-file-drop/dist/vue-full-screen-file-drop.css';
+
 $font-stack:    'Raleway', sans-serif;
 $text-color: #636b6f;
 $background-color: #fff;
@@ -5,10 +9,13 @@ $background-color: #fff;
 html, body {
     background-color: $background-color;
     color: $text-color;
-    font-family: $font-stack;
     font-weight: 100;
     height: 100vh;
     margin: 0;
+}
+
+body > div {
+    margin-bottom: 300px;
 }
 
 .full-height {
@@ -51,4 +58,8 @@ html, body {
 
 .m-b-md {
     margin-bottom: 30px;
+}
+
+[v-cloak] {
+  display: none !important;
 }

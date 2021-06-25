@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block css %}
+<style>
+    .sr-only {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block title %}
+Survero - Paper Survey Application
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="title m-b-md">
+            {{ config('application.name') }}
+        </div>
+    </div>
+
+    {% raw %}
+    <div id="app" v-cloak>
+        <div>
+            <strong>{{ notes.length }} Unique Notes.</strong>
+        </div>
+        <ol reversed>
+            <li v-for="n in notes">
+                <a v-bind:href="'/papers/' + n.paper_key" style="text-decoration: none">
+                    [{{ n.paper_key }}]
+                </a>
+                {{ n.note }}
+            </li>
+        </ol>
+    </div>
+    {% endraw %}
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    var app = null;
+    window.onload = () => {
+        app = new Vue({
+            el: '#app',
+            data() {
+                return {
+                    notes: [],
+                }
+            },
+            methods: {
+                reload() {
+                    axios.get('/api/notes')
+                        .then(response => {
+                            this.notes = response.data;
+                        });
+                }
+            },
+            mounted() {
+                this.reload()
+            }
+        });
+    }
+</script>
+{% endblock %}

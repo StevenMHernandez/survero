@@ -22,22 +22,6 @@ DRIVERS = {
         "secret": env("S3_SECRET", "HkZj..."),
         "bucket": env("S3_BUCKET", "s3bucket"),
     },
-    "rackspace": {
-        "username": env("RACKSPACE_USERNAME", "username"),
-        "secret": env("RACKSPACE_SECRET", "3cd5b0e8..."),
-        "container": env("RACKSPACE_CONTAINER", "masonite"),
-        "region": env("RACKSPACE_REGION", "IAD"),
-        "location": "http://03c8...rackcdn.com/",
-    },
-    "azure": {
-        "name": env("AZURE_NAME", "masonite"),
-        "secret": env("AZURE_SECRET", "RykG8qsa4kTOddF=="),
-        "connection": env(
-            "AZURE_CONNECTION", "DefaultEndpointsProtocol=https;AccountName=..."
-        ),
-        "container": env("AZURE_CONTAINER", "masonite"),
-        "location": "https://masonite.blob.core.windows.net/container/",
-    },
 }
 
 
@@ -53,8 +37,9 @@ and an alias of <img src="/static/image.png">
 
 STATICFILES = {
     # folder          # template alias
-    "storage/static": "static/",
-    "storage/compiled": "static/",
-    "storage/uploads": "static/",
+    "storage/static": "/static",
+    "storage/compiled": "/static",
+    "storage/uploads": "/uploads",
     "storage/public": "/",
+    "public": "/public",
 }

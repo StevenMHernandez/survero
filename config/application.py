@@ -56,3 +56,8 @@ them in but feel free to autoload any directories
 AUTOLOAD = [
     "app",
 ]
+
+"""Zotero Path
+Path to local PDF files from Zotero 
+"""
+ZOTERO_PATH = env('ZOTERO_PATH')

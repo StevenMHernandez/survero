@@ -23,7 +23,7 @@ AUTH = {
             "driver": "cookie",
             "model": User,
             "drivers": {  # 'cookie', 'jwt'
-                "jwt": {"reauthentication": True, "lifetime": "5 minutes"}
+                "jwt": {"reauthentication": True, "lifetime": "60 minutes"}
             },
         },
     },
@@ -35,6 +35,6 @@ DRIVERS = {
         """Whether or not to reauthenticate with the database when the token expires."""
         "reauthentication": True,
         """How long the token should live for before being refreshed."""
-        "lifetime": "5 minutes",
+        "lifetime": "60 minutes",
     },
 }

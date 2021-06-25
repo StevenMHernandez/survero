@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block css %}
+<style>
+    .sr-only {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block title %}
+Survero - Paper Survey Application
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="title m-b-md">
+            {{ config('application.name') }}
+        </div>
+    </div>
+
+    {% raw %}
+    <div id="app" v-cloak>
+        <div>
+            {{ screenshots.length }} Unique Screenshots.
+        </div>
+        <div v-for="s in screenshots">
+            <a v-bind:href="'/papers/' + s.paper_key">
+                <b-img thumbnail fluid v-bind:src="'/uploads/' + s.file_name" style="margin-bottom: 80px; width: 50%;"></b-img>
+            </a>
+        </div>
+    </div>
+    {% endraw %}
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    var app = null;
+    window.onload = () => {
+        app = new Vue({
+            el: '#app',
+            data() {
+                return {
+                    screenshots: [],
+                }
+            },
+            methods: {
+                reload() {
+                    axios.get('/api/screenshots')
+                        .then(response => {
+                            this.screenshots = response.data;
+                        });
+                }
+            },
+            mounted() {
+                this.reload()
+            }
+        });
+    }
+</script>
+{% endblock %}

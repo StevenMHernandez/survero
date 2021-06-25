@@ -26,12 +26,12 @@ DATABASES = {
     'default': env('DB_CONNECTION', 'sqlite'),
     'sqlite': {
         'driver': 'sqlite',
-        'database': '/usr/src/db/survero',
+        'database': '/usr/src/db/survero/survero.sqlite',
         'prefix': ''
     },
-    'survero': {
+    'zotero': {
         'driver': 'sqlite',
-        'database': '/usr/src/db/zotero',
+        'database': '/usr/src/db/zotero/zotero.sqlite',
         'prefix': ''
     }
 }

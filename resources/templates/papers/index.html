@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block css %}
+<style>
+    .sr-only {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block title %}
+Survero - Paper Survey Application
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="title m-b-md">
+            {{ config('application.name') }}
+        </div>
+    </div>
+
+    {% raw %}
+    <div id="app" v-cloak>
+        <div>
+            {{ items.filter(x => !x.needs_review).length }} / {{ items.length }} Papers. ({{ (1 - (items.filter(x => !x.needs_review).length / items.length)).toFixed(2) * 100 }}% Remaining)
+        </div>
+        <div>
+            <span class="text-success">{{ num_collections_completed() }} Collections Completed</span>,
+            <span>{{ num_collections_in_progress() }} In Progress</span>,
+            <span class="text-danger">{{ num_collections_not_started() }} Not Started</span>.
+        </div>
+        <div>
+            <label>Group by Collection? <input type="checkbox" v-model="group_by_collection"></label>
+        </div>
+        <div v-if="!group_by_collection">
+            <b-table striped hover
+                     :fields="fields"
+                     :busy.sync="isBusy"
+                     :items="items"
+                     :sort-by.sync="sortBy"
+                     :sort-desc.sync="sortDesc"
+                     :sort-desc.sync="sortDesc"
+                     responsive="sm">
+                <template #cell(key)="data">
+                    <a v-bind:href="'/papers/' + data.value">{{ data.value }}</a>
+                </template>
+            </b-table>
+        </div>
+        <div v-if="group_by_collection">
+            <ul>
+                <li v-for="c in collections">
+                    <span v-bind:class="collectionClass(c)">
+                        {{ c }}
+                        (
+                        {{ items_per_collection[c].filter(x => !x.needs_review).length }}
+                        /
+                        {{ items_per_collection[c].length }}
+                        )
+                    </span>
+                </li>
+            </ul>
+            <div v-for="c in collections">
+                <h3 id="c">{{ c }} ({{ items_per_collection[c].filter(x => x.num_tags > 0 || x.num_screenshots > 0 || x.num_notes > 0).length }} / {{ items_per_collection[c].length }})</h3>
+                <b-table striped hover
+                         :fields="fields"
+                         :busy.sync="isBusy"
+                         :items="items_per_collection[c]"
+                         :sort-by.sync="sortBy"
+                         :sort-desc.sync="sortDesc"
+                         :sort-desc.sync="sortDesc"
+                         responsive="sm">
+                    <template #cell(key)="data">
+                        <a v-bind:href="'/papers/' + data.value">{{ data.value }}</a>
+                    </template>
+                </b-table>
+            </div>
+        </div>
+    </div>
+    {% endraw %}
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    var app = null;
+    window.onload = () => {
+        app = new Vue({
+            el: '#app',
+            data() {
+                return {
+                    group_by_collection: true,
+                    items: [],
+                    collections: [],
+                    items_per_collection: {},
+                    isBusy: false,
+                    sortBy: 'Title',
+                    sortDesc: false,
+                    fields: [
+                        {key: 'itemID', sortable: true},
+                        {key: 'key', sortable: true},
+                        {key: 'title', sortable: true},
+                        {key: 'collectionName', sortable: true},
+                        {key: 'num_tags', sortable: true},
+                        {key: 'num_screenshots', sortable: true},
+                        {key: 'num_notes', sortable: true},
+                        {key: 'num_attachments', sortable: true},
+                    ],
+                }
+            },
+            methods: {
+                reload() {
+                    this.isBusy = true;
+                    axios.get('/api/papers')
+                        .then(response => {
+                            this.isBusy = false;
+                            this.items = response.data;
+                            this.collections = [...new Set(this.items.map((x) => x.collectionName))].sort();
+                            this.collections.forEach((c) => {
+                                this.items_per_collection[c] = [];
+                            });
+                            this.items.forEach((x) => {
+                                this.items_per_collection[x.collectionName].push(x)
+                            });
+                        });
+                },
+                collectionClass(c) {
+                    completed = this.items_per_collection[c].filter(x => !x.needs_review).length;
+                    total = this.items_per_collection[c].length;
+                    if (completed == total) {
+                        return 'text-success';
+                    }
+                    if (completed == 0) {
+                        return 'text-danger';
+                    }
+                    return '';
+                },
+                num_collections_completed() {
+                    return this.collections.filter(c => this.collectionClass(c) === 'text-success').length;
+                },
+                num_collections_in_progress() {
+                    return this.collections.filter(c => this.collectionClass(c) === '').length;
+                },
+                num_collections_not_started() {
+                    return this.collections.filter(c => this.collectionClass(c) === 'text-danger').length;
+                }
+            },
+            mounted() {
+                this.reload()
+            }
+        });
+    }
+</script>
+{% endblock %}

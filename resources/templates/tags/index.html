@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block css %}
+<style>
+    .sr-only {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block title %}
+Survero - Paper Survey Application
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="title m-b-md">
+            {{ config('application.name') }}
+        </div>
+    </div>
+
+    {% raw %}
+    <div id="app" v-cloak>
+        <div>
+            {{ tags.length }} Unique Tags,
+            {{ tag_groups.length }} Unique Tag Groups,
+            {{ tags.map(x => x.num_tags).reduce((x, y) => x + y, 0) }} Tags Saved.
+        </div>
+        <div v-for="tg in tag_groups">
+            {{ tg ? tg : "[GLOBAL]" }}
+            <ul>
+                <li v-for="t in tags_per_group[tg]">
+                    <span v-on:click="showModel(t.tag)">
+                        {{ t.tag }} ({{ t.num_tags }})
+                    </span>
+                </li>
+            </ul>
+        </div>
+
+
+        <b-modal ref="my-modal" hide-footer title="Update Tag Value">
+            <label class="form-group">
+                Old Tag Value:
+                <b-form-input type="text" v-model="old_tag_value" disabled></b-form-input>
+            </label>
+            <label>
+                New Tag Value:
+                <b-form-input type="text" v-model="new_tag_value" v-on:keyup.enter="updateTag" ref="new_tag_value"></b-form-input>
+            </label>
+
+            <b-button class="mt-2" block v-on:click="updateTag">Update Tag</b-button>
+        </b-modal>
+    </div>
+    {% endraw %}
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    var app = null;
+    window.onload = () => {
+        app = new Vue({
+            el: '#app',
+            data() {
+                return {
+                    tags: [],
+                    tag_groups: [],
+                    tags_per_group: {},
+                    old_tag_value: "",
+                    new_tag_value: "",
+                }
+            },
+            methods: {
+                reload() {
+                    this.isBusy = true;
+                    axios.get('/api/tags')
+                        .then(response => {
+                            this.tags = response.data;
+
+                            this.tags.map(t => {
+                                pos = t.tag.indexOf(":");
+                                t['tag_group'] = pos > -1 ? t.tag.slice(0, pos) : "";
+                                return t;
+                            });
+
+                            this.tag_groups = [...new Set(this.tags.map((t) => t.tag_group))].sort();
+
+                            this.tag_groups.forEach((c) => {
+                                this.tags_per_group[c] = [];
+                            });
+                            this.tags.forEach((t) => {
+                                this.tags_per_group[t.tag_group].push(t)
+                            });
+                        });
+                },
+                showModel(tag_value) {
+                    this.old_tag_value = tag_value;
+                    this.new_tag_value = tag_value;
+                    this.$refs['my-modal'].show()
+                },
+                updateTag() {
+                    axios({
+                        method: "put",
+                        url: '/api/tags/update',
+                        data: {
+                            '__token': '{{ csrf_token }}',
+                            'old_tag_value': this.old_tag_value,
+                            'new_tag_value': this.new_tag_value,
+                        },
+                    }).then(response => {
+                        this.$refs['my-modal'].hide();
+                        this.reload();
+                    });
+                }
+            },
+            mounted() {
+                this.reload()
+            }
+        });
+    }
+</script>
+{% endblock %}
