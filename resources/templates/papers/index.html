@@ -14,14 +14,13 @@ Survero - Paper Survey Application
 
 {% block content %}
 <div class="container">
-    <div class="row">
-        <div class="title m-b-md">
-            {{ config('application.name') }}
-        </div>
-    </div>
-
     {% raw %}
     <div id="app" v-cloak>
+        <div v-if="filter_by_tag_group">
+            <strong>
+            Filtering based on Tag Group: <em>{{ filter_by_tag_group }}</em>.
+            </strong>
+        </div>
         <div>
             {{ items.filter(x => !x.needs_review).length }} / {{ items.length }} Papers. ({{ (1 - (items.filter(x => !x.needs_review).length / items.length)).toFixed(2) * 100 }}% Remaining)
         </div>
@@ -39,7 +38,6 @@ Survero - Paper Survey Application
                      :busy.sync="isBusy"
                      :items="items"
                      :sort-by.sync="sortBy"
-                     :sort-desc.sync="sortDesc"
                      :sort-desc.sync="sortDesc"
                      responsive="sm">
                 <template #cell(key)="data">
@@ -68,7 +66,6 @@ Survero - Paper Survey Application
                          :items="items_per_collection[c]"
                          :sort-by.sync="sortBy"
                          :sort-desc.sync="sortDesc"
-                         :sort-desc.sync="sortDesc"
                          responsive="sm">
                     <template #cell(key)="data">
                         <a v-bind:href="'/papers/' + data.value">{{ data.value }}</a>
@@ -89,6 +86,7 @@ Survero - Paper Survey Application
             el: '#app',
             data() {
                 return {
+                    filter_by_tag_group: false,
                     group_by_collection: true,
                     items: [],
                     collections: [],
@@ -111,7 +109,11 @@ Survero - Paper Survey Application
             methods: {
                 reload() {
                     this.isBusy = true;
-                    axios.get('/api/papers')
+                    var params = (new URL(document.location)).searchParams;
+                    var tag_group = params.get("tag_group");
+                    this.filter_by_tag_group = tag_group;
+                    var path = tag_group ? '/api/papers?tag_group=' + tag_group : '/api/papers';
+                    axios.get(path)
                         .then(response => {
                             this.isBusy = false;
                             this.items = response.data;

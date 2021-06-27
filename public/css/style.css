@@ -13455,7 +13455,7 @@ body {
   margin: 0;
 }
 
-body > div {
+body > div:last-of-type {
   margin-bottom: 300px;
 }
 
@@ -13503,5 +13503,21 @@ body > div {
 
 [v-cloak] {
   display: none !important;
+}
+
+.title {
+  margin: 0;
+}
+
+.nav {
+  padding: 0 10px 10px;
+}
+
+.nav li {
+  margin-right: 16px;
+}
+
+.nav li a {
+  text-decoration: none;
 }
 

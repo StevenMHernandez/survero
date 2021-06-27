@@ -16,6 +16,20 @@
 </head>
 
 <body>
+
+<div class="container">
+    <div class="row">
+        <div class="title m-b-md">
+            {{ config('application.name') }}
+        </div>
+        <ul class="nav">
+            <li><a href="/papers">Papers</a></li>
+            <li><a href="/tags">Tags</a></li>
+            <li><a href="/notes">Notes</a></li>
+        </ul>
+    </div>
+<hr>
+</div>
 {% block content %}
 
 {% endblock %}

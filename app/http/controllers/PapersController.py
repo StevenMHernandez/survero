@@ -23,7 +23,7 @@ class PapersController(Controller):
     def api_index(self, view: View, request: Request):
         collections = QueryBuilder().on('zotero').table('collections') \
             .where('parentCollectionID', '=', PRIMARY_COLLECTION_ID)\
-            .where_not_in('collectionId', [69, 65, 90, 74, 46, 73, 41, 14, 68, 97, 87])\
+            .where_not_in('collectionId', [69, 65, 90, 74, 46, 73, 41, 14, 68, 97, 87, 61])\
             .select('collectionID') \
             .get()
         collection_ids = [list(x.values())[0] for x in collections]
@@ -45,8 +45,11 @@ class PapersController(Controller):
             .order_by('title', 'asc') \
             .get()
 
-        tags = QueryBuilder().on('sqlite').table('tags').group_by('paper_key') \
-            .select_raw('paper_key, COUNT(paper_key) as num').get()
+        tags = QueryBuilder().on('sqlite').table('tags').group_by('paper_key')
+        if request.query('tag_group', False):
+            tags = tags.where_like('tag', request.query('tag_group') + ': %')
+        tags = tags.select_raw('paper_key, COUNT(paper_key) as num') #.get()
+        tags = tags.get()
         tags = {r['paper_key']: r['num'] for r in tags}
         screenshots = QueryBuilder().on('sqlite').table('screenshots').group_by('paper_key') \
             .select_raw('paper_key, COUNT(paper_key) as num').get()
@@ -59,7 +62,10 @@ class PapersController(Controller):
             r['num_tags'] = tags.get(r['key'], 0)
             r['num_screenshots'] = screenshots.get(r['key'], 0)
             r['num_notes'] = notes.get(r['key'], 0)
-            r['needs_review'] = not (r['num_tags'] or r['num_screenshots'] or r['num_notes'])
+            if request.query('tag_group', False):
+                r['needs_review'] = not (r['num_tags'])
+            else:
+                r['needs_review'] = not (r['num_tags'] or r['num_screenshots'] or r['num_notes'])
             return r
 
         items = [add_additional_fields(r) for r in items]

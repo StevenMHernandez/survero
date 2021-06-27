@@ -13,13 +13,10 @@ Survero - Paper Survey Application
 {% endblock %}
 
 {% block content %}
+<script>
+    TAG_GROUP_GRAPHS__SORT_NUMERICALLY = {{ config('application.TAG_GROUP_GRAPHS__SORT_NUMERICALLY')|tojson }};
+</script>
 <div class="container">
-    <div class="row">
-        <div class="title m-b-md">
-            {{ config('application.name') }}
-        </div>
-    </div>
-
     {% raw %}
     <div id="app" v-cloak>
         <div>
@@ -28,7 +25,14 @@ Survero - Paper Survey Application
             {{ tags.map(x => x.num_tags).reduce((x, y) => x + y, 0) }} Tags Saved.
         </div>
         <div v-for="tg in tag_groups">
-            {{ tg ? tg : "[GLOBAL]" }}
+            <h3 v-if="tg">
+                <a v-bind:href="filterByTagGroupUrl(tg)">
+                    {{ tg }}
+                </a>
+            </h3>
+            <h3 v-if="!tg">[GLOBAL TAG GROUP]</h3>
+
+            <plotly :data="data[tg]" :layout="layout[tg]" :display-mode-bar="false"></plotly>
             <ul>
                 <li v-for="t in tags_per_group[tg]">
                     <span v-on:click="showModel(t.tag)">
@@ -60,6 +64,8 @@ Survero - Paper Survey Application
 <script>
     var app = null;
     window.onload = () => {
+        Vue.component('plotly', Plotly);
+
         app = new Vue({
             el: '#app',
             data() {
@@ -69,6 +75,8 @@ Survero - Paper Survey Application
                     tags_per_group: {},
                     old_tag_value: "",
                     new_tag_value: "",
+                    data: {},
+                    layout: {},
                 }
             },
             methods: {
@@ -86,12 +94,44 @@ Survero - Paper Survey Application
 
                             this.tag_groups = [...new Set(this.tags.map((t) => t.tag_group))].sort();
 
-                            this.tag_groups.forEach((c) => {
-                                this.tags_per_group[c] = [];
+                            this.tag_groups.forEach((tg) => {
+                                this.tags_per_group[tg] = [];
+                                this.data[tg] = [{
+                                    x: [],
+                                    y: [],
+                                    type: "bar"
+                                }];
+                                this.layout[tg] = {title: tg}
                             });
                             this.tags.forEach((t) => {
-                                this.tags_per_group[t.tag_group].push(t)
+                                pos = t.tag.indexOf(": ");
+
+                                tag_name = t.tag;
+                                if (pos > -1) {
+                                    tag_name = tag_name.slice(pos+2, tag_name.length);
+                                }
+                                this.tags_per_group[t.tag_group].push(t);
+                                this.data[t.tag_group][0]['x'].push(tag_name);
+                                this.data[t.tag_group][0]['y'].push(t.num_tags);
                             });
+
+                            TAG_GROUP_GRAPHS__SORT_NUMERICALLY.forEach((tg) => {
+                                d = {};
+                                this.data[tg][0]['x'].forEach((_, i) => {
+                                    d[this.data[tg][0]['x'][i]] = this.data[tg][0]['y'][i];
+                                });
+                                keys = Object.keys(d);
+                                numeric_keys = keys.map((t) => {
+                                    return parseInt(t);
+                                });
+
+                                [...Array(keys.length).keys()].sort((a, b) => {
+                                    return numeric_keys[a] - numeric_keys[b]
+                                }).forEach((n, i) => {
+                                    this.data[tg][0]['x'][i] = keys[n];
+                                    this.data[tg][0]['y'][i] = d[keys[n]];
+                                });
+                            })
                         });
                 },
                 showModel(tag_value) {
@@ -112,6 +152,9 @@ Survero - Paper Survey Application
                         this.$refs['my-modal'].hide();
                         this.reload();
                     });
+                },
+                filterByTagGroupUrl(tg) {
+                    return '/papers?tag_group=' + encodeURIComponent(tg);
                 }
             },
             mounted() {

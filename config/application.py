@@ -61,3 +61,13 @@ AUTOLOAD = [
 Path to local PDF files from Zotero 
 """
 ZOTERO_PATH = env('ZOTERO_PATH')
+
+
+"""Tag Group Graphs: Sort Numerically
+Which tag groups should be sorted numerically based on content.
+For example: ["# of Something: 12", "# of Something: 3", "# of Something: 9"] would be sorted based on [12, 3, 9]. 
+"""
+if env('TAG_GROUP_GRAPHS__SORT_NUMERICALLY'):
+    TAG_GROUP_GRAPHS__SORT_NUMERICALLY = [l for l in env('TAG_GROUP_GRAPHS__SORT_NUMERICALLY').split("\n") if len(l) > 0]
+else:
+    TAG_GROUP_GRAPHS__SORT_NUMERICALLY = ['']
