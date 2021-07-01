@@ -21,6 +21,14 @@
             <h1>
                 {{ item.title }}
             </h1>
+            <h5>
+                <span v-for="a,i in item.authors">
+                    <span v-if="i>0">,</span>
+                    <a v-bind:href="'/authors/' + a.creatorID">
+                        {{a.firstName}} {{a.lastName}}
+                    </a>
+                </span>
+            </h5>
             <h6 class="text-muted" v-for="c in item.collections">(Collection: {{ c.collectionName }})</h6>
             <b-container fluid class="p-4 bg-dark">
                 <b-row>

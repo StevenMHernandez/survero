@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block css %}
+<style>
+    .sr-only {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block title %}
+{{ author.title }} - Survero
+{% endblock %}
+
+{% block content %}
+{% raw %}
+
+<div id="app" v-cloak>
+    <div class="container">
+        <div class="row">
+            <h4>
+                {{ author.firstName }} {{ author.lastName }}
+            </h4>
+
+            <ol>
+                <li v-for="p in author.papers">
+                    <a v-bind:href="'/papers/' + p.key">
+                        {{ p.title }}
+                    </a>
+                    <br>
+                    <small><em>(<span v-for="c,i in p.collections"><span v-if="i>0">, </span>{{ c }}</span>)</em></small>
+                </li>
+            </ol>
+        </div>
+    </div>
+</div>
+{% endraw %}
+
+{% endblock %}
+
+
+{% block script %}
+<script>
+    window.onload = () => {
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    author: {},
+                }
+            },
+            methods: {
+                reload() {
+                    axios.get('/api/authors/{{ author.creatorID }}')
+                        .then(response => {
+                            this.author = response.data;
+                            document.title = this.author.firstName + " " + this.author.lastName;
+                        });
+                },
+            },
+            mounted() {
+                this.reload()
+            }
+        })
+    }
+</script>
+{% endblock %}

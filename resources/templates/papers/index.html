@@ -70,6 +70,14 @@ Survero - Paper Survey Application
                     <template #cell(key)="data">
                         <a v-bind:href="'/papers/' + data.value">{{ data.value }}</a>
                     </template>
+                    <template #cell(needs_review)="data">
+                        <span v-if="data.value" class="text-danger">
+                            Needs Review
+                        </span>
+                        <span v-if="!data.value" class="text-success">
+                            Reviewed
+                        </span>
+                    </template>
                 </b-table>
             </div>
         </div>
@@ -103,6 +111,7 @@ Survero - Paper Survey Application
                         {key: 'num_screenshots', sortable: true},
                         {key: 'num_notes', sortable: true},
                         {key: 'num_attachments', sortable: true},
+                        {key: 'needs_review', sortable: true}
                     ],
                 }
             },

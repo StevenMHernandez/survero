@@ -35,7 +35,7 @@ Survero - Paper Survey Application
             <plotly :data="data[tg]" :layout="layout[tg]" :display-mode-bar="false"></plotly>
             <ul>
                 <li v-for="t in tags_per_group[tg]">
-                    <span v-on:click="showModel(t.tag)">
+                    <span v-on:click="showModel(t.tag_id, t.tag)">
                         {{ t.tag }} ({{ t.num_tags }})
                     </span>
                 </li>
@@ -54,6 +54,12 @@ Survero - Paper Survey Application
             </label>
 
             <b-button class="mt-2" block v-on:click="updateTag">Update Tag</b-button>
+
+            <hr>
+            <h6>Papers with this Tag</h6>
+            <b-list-group>
+                <b-list-group-item v-bind:href="'/papers/' + p.key" v-for="p in papers_per_tag">{{ p.title }}</b-list-group-item>
+            </b-list-group>
         </b-modal>
     </div>
     {% endraw %}
@@ -75,6 +81,7 @@ Survero - Paper Survey Application
                     tags_per_group: {},
                     old_tag_value: "",
                     new_tag_value: "",
+                    papers_per_tag: [],
                     data: {},
                     layout: {},
                 }
@@ -134,10 +141,18 @@ Survero - Paper Survey Application
                             })
                         });
                 },
-                showModel(tag_value) {
+                showModel(tag_id, tag_value) {
                     this.old_tag_value = tag_value;
                     this.new_tag_value = tag_value;
-                    this.$refs['my-modal'].show()
+                    this.papers_per_tag = [];
+                    this.$refs['my-modal'].show();
+                    axios({
+                        method: "get",
+                        url: '/api/tags/' + tag_id,
+                    }).then(response => {
+                        console.log(response, "response");
+                        this.papers_per_tag = response['data']
+                    });
                 },
                 updateTag() {
                     axios({

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block css %}
+<style>
+    .sr-only {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block title %}
+Survero - Paper Survey Application
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% raw %}
+    <div id="app" v-cloak>
+        <b-table striped hover
+                 :fields="fields"
+                 :busy.sync="isBusy"
+                 :items="items"
+                 :sort-by.sync="sortBy"
+                 :sort-desc.sync="sortDesc"
+                 responsive="sm">
+            <template #cell(creatorID)="data">
+                <a v-bind:href="'/authors/' + data.value">{{ data.value }}</a>
+            </template>
+        </b-table>
+    </div>
+    {% endraw %}
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    var app = null;
+    window.onload = () => {
+        app = new Vue({
+            el: '#app',
+            data() {
+                return {
+                    items: [],
+                    isBusy: false,
+                    sortBy: 'num_papers',
+                    sortDesc: true,
+                    fields: [
+                        {key: 'creatorID', sortable: true},
+                        {key: 'firstName', sortable: true},
+                        {key: 'lastName', sortable: true},
+                        {key: 'num_papers', sortable: true},
+                    ],
+                }
+            },
+            methods: {
+                reload() {
+                    this.isBusy = true;
+                    axios.get('/api/authors')
+                        .then(response => {
+                            this.isBusy = false;
+                            this.items = response.data;
+                        });
+                },
+            },
+            mounted() {
+                this.reload()
+            }
+        });
+    }
+</script>
+{% endblock %}

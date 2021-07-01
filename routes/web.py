@@ -8,13 +8,20 @@ ROUTES = [
     Get("/papers/", "PapersController@index"),
     Get("/papers/@key", "PapersController@show"),
 
+    Get("/authors/", "AuthorsController@index"),
+    Get("/authors/@creator_id", "AuthorsController@show"),
+
     Get("/tags/", "TagsController@index"),
     Get("/tags/@tag", "TagsController@show"),
 
     Get("/api/papers/", "PapersController@api_index"),
     Get("/api/papers/@key", "PapersController@api_show"),
 
+    Get("/api/authors/", "AuthorsController@api_index"),
+    Get("/api/authors/@creator_id", "AuthorsController@api_show"),
+
     Get("/api/tags", "TagsController@api_index"),
+    Get("/api/tags/@tag_id", "TagsController@api_show"),
     Post("/api/tags", "TagsController@create"),
     Put("/api/tags/update", "TagsController@update"),
     Delete("/api/tags/@id", "TagsController@delete"),

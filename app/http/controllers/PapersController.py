@@ -20,7 +20,7 @@ class PapersController(Controller):
         item = QueryBuilder().on('zotero').table("items").where('key', '=', request.param('key')).first()
         return view.render("papers.show", {'item': item})
 
-    def api_index(self, view: View, request: Request):
+    def api_index(self, request: Request):
         collections = QueryBuilder().on('zotero').table('collections') \
             .where('parentCollectionID', '=', PRIMARY_COLLECTION_ID)\
             .where_not_in('collectionId', [69, 65, 90, 74, 46, 73, 41, 14, 68, 97, 87, 61])\
@@ -72,7 +72,7 @@ class PapersController(Controller):
 
         return items
 
-    def api_show(self, view: View, request: Request):
+    def api_show(self, request: Request):
         item = QueryBuilder().on('zotero').table("items").where('key', '=', request.param('key')) \
             .join('collectionItems', 'items.itemID', '=', 'collectionItems.itemID') \
             .join('collections', 'collections.collectionID', '=', 'collectionItems.collectionID') \
@@ -95,6 +95,12 @@ class PapersController(Controller):
             .table("itemData").where('itemID', '=', item['itemID']) \
             .join('fields', 'itemData.fieldID', '=', 'fields.fieldID') \
             .join('itemDataValues', 'itemData.valueID', '=', 'itemDataValues.valueID') \
+            .get()
+
+        item['authors'] = QueryBuilder().on('zotero') \
+            .table("creators") \
+            .join('itemCreators', 'creators.creatorID', '=', 'itemCreators.creatorID') \
+            .where('itemCreators.itemID', '=', item['itemID']) \
             .get()
 
         item['title'] = [x['value'] for x in item['metadata'] if x['fieldName'] == 'title'][0]
