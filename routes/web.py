@@ -9,6 +9,7 @@ ROUTES = [
     Get("/papers/@key", "PapersController@show"),
 
     Get("/authors/", "AuthorsController@index"),
+    Get("/authors/graph", "AuthorsController@graph"),
     Get("/authors/@creator_id", "AuthorsController@show"),
 
     Get("/tags/", "TagsController@index"),
@@ -18,6 +19,7 @@ ROUTES = [
     Get("/api/papers/@key", "PapersController@api_show"),
 
     Get("/api/authors/", "AuthorsController@api_index"),
+    Get("/api/authors/graph", "AuthorsController@api_graph"),
     Get("/api/authors/@creator_id", "AuthorsController@api_show"),
 
     Get("/api/tags", "TagsController@api_index"),

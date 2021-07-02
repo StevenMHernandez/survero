@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Co-Authorship Graph - Survero - Paper Survey Application
+{% endblock %}
+
+{% block css %}
+<style>
+    .tooltip {
+        background-color: white;
+        padding: 4px;
+        border: 0px;
+        border-radius: 4px;
+        box-shadow: 3px 3px 10px rgba(0, 0, 0, .5);
+        pointer-events: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="graph"></div>
+{% endblock %}
+
+{% block script %}
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.js"></script>
+<script>
+    var width = window.screen.width;
+    var height = window.screen.width;
+
+    var svg = d3.select("#graph")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    d3.json("/api/authors/graph", function (data) {
+        var simulation = d3.forceSimulation(data.nodes)
+            .force("link", d3.forceLink(data.links).id(d => d.id))
+            .force("charge", d3.forceManyBody())
+            .force("x", d3.forceX())
+            .force("y", d3.forceY())
+            .force("center", d3.forceCenter(width / 2, height / 2));
+
+        drag = () => {
+            function dragstarted(event, d) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+            }
+
+            function dragged(event, d) {
+                event.x = d3.event.x;
+                event.y = d3.event.y;
+            }
+
+            function dragended(event, d) {
+                if (!event.active) simulation.alphaTarget(0);
+            }
+
+            return d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended);
+        };
+
+        var link = svg
+            .selectAll("line")
+            .data(data.links)
+            .enter()
+            .append("line")
+            .style("stroke", "#aaa")
+            .attr("stroke-width", d => Math.sqrt(d.value));
+
+        var node = svg
+            .selectAll(".node")
+            .data(data.nodes)
+            .enter().append("g")
+            .attr("class", "node")
+            .call(drag(simulation));
+
+        var tooltip = d3.select("body")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
+        node.append('circle')
+            .attr('r', 5)
+            .attr("fill", '#101010')
+            .on('mouseover.tooltip', function (d) {
+                tooltip.transition()
+                    .duration(300)
+                    .style("opacity", .8);
+                tooltip.html(d.name)
+                    .style("left", (d3.event.pageX) + "px")
+                    .style("top", (d3.event.pageY + 10) + "px");
+            })
+            .on("mouseout.tooltip", function () {
+                tooltip.transition()
+                    .duration(100)
+                    .style("opacity", 0);
+            })
+            .on("mousemove", function () {
+                tooltip.style("left", (d3.event.pageX) + "px")
+                    .style("top", (d3.event.pageY + 10) + "px");
+            });
+
+
+        simulation.on("tick", () => {
+            link.attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+
+            node.attr("transform", function (d) {
+                return "translate(" + d.x + "," + d.y + ")";
+            });
+        });
+
+
+    });
+</script>
+{% endblock %}

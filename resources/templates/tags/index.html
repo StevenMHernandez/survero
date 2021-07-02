@@ -31,6 +31,7 @@ Survero - Paper Survey Application
                 </a>
             </h3>
             <h3 v-if="!tg">[GLOBAL TAG GROUP]</h3>
+            n_tags={{ tags_per_group[tg].map(t => t.num_tags).reduce((a, b) => a + b, 0) }}
 
             <plotly :data="data[tg]" :layout="layout[tg]" :display-mode-bar="false"></plotly>
             <ul>
