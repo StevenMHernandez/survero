@@ -31,6 +31,23 @@
                     <small><em>(<span v-for="c,i in p.collections"><span v-if="i>0">, </span>{{ c }}</span>)</em></small>
                 </li>
             </ol>
+
+            <hr>
+
+            <div>
+                {{ screenshots.length }} Unique Screenshots.
+            </div>
+            <div v-for="row in Math.ceil(screenshots.length / 4)">
+                <b-container fluid class="p-4 bg-dark">
+                    <b-row>
+                        <b-col v-if="(row-1) * 4 + i - 1 < screenshots.length" v-for="i in 4" style="max-width: 400px;">
+                            <a v-bind:href="'/papers/' + screenshots[(row-1) * 4 + i - 1].paper_key">
+                                <b-img thumbnail fluid v-bind:src="'/uploads/' + screenshots[(row-1) * 4 + i - 1].file_name" style="margin-bottom: 20px;"></b-img>
+                            </a>
+                        </b-col>
+                    </b-row>
+                </b-container>
+            </div>
         </div>
     </div>
 </div>
@@ -47,6 +64,7 @@
             data() {
                 return {
                     author: {},
+                    screenshots: [],
                 }
             },
             methods: {
@@ -54,6 +72,7 @@
                     axios.get('/api/authors/{{ author.creatorID }}')
                         .then(response => {
                             this.author = response.data;
+                            this.screenshots = this.author.screenshots;
                             document.title = this.author.firstName + " " + this.author.lastName;
                         });
                 },

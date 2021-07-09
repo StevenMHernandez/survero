@@ -134,4 +134,6 @@ class AuthorsController(Controller):
 
         author['papers'] = papers_organized
 
+        author['screenshots'] =  QueryBuilder().table('screenshots').where_in('paper_key', papers_organized.keys()).get()
+
         return author
