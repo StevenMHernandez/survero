@@ -16,6 +16,9 @@ Survero - Paper Survey Application
 <div class="container">
     {% raw %}
     <div id="app" v-cloak>
+        <div>
+            {{ items.length }} Authors.
+        </div>
         <b-table striped hover
                  :fields="fields"
                  :busy.sync="isBusy"

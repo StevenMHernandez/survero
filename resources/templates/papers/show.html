@@ -132,6 +132,9 @@
                         .then(response => {
                             this.item = response.data;
                             document.title = this.item.title;
+                            this.item.tags = this.item.tags.sort((x,y) => {
+                                return x.tag > y.tag
+                            });
 
                             axios.get('/api/tags/')
                                 .then(response => {

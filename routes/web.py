@@ -35,4 +35,8 @@ ROUTES = [
     Get("/notes", "NotesController@index"),
     Get("/api/notes", "NotesController@api_index"),
     Post("/api/notes", "NotesController@create"),
+
+    Get("/search", "FullTextSearchController@index"),
+    Get("/api/search", "FullTextSearchController@api_index"),
+    Get("/api/search/alternatives", "FullTextSearchController@api_alternatives"),
 ]

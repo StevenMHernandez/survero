@@ -24,6 +24,14 @@ Survero - Paper Survey Application
             {{ tag_groups.length }} Unique Tag Groups,
             {{ tags.map(x => x.num_tags).reduce((x, y) => x + y, 0) }} Tags Saved.
         </div>
+
+        <ul>
+            <li v-for="tg in tag_groups">
+                {{ tg ? tg : '[GLOBAL TAG GROUP]' }}
+                <small><em>(n_tags={{ tags_per_group[tg].map(t => t.num_tags).reduce((a, b) => a + b, 0) }})</em></small>
+            </li>
+        </ul>
+
         <div v-for="tg in tag_groups">
             <h3 v-if="tg">
                 <a v-bind:href="filterByTagGroupUrl(tg)">

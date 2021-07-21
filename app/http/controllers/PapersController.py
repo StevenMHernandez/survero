@@ -10,6 +10,7 @@ from app.Screenshot import Screenshot
 ITEM_DATA_FIELD__TITLE = 1
 ITEM_TYPE__ATTACHMENT = 2
 PRIMARY_COLLECTION_ID = 14
+CREATOR_TYPES__EDITOR = 10
 
 class PapersController(Controller):
 
@@ -100,7 +101,9 @@ class PapersController(Controller):
         item['authors'] = QueryBuilder().on('zotero') \
             .table("creators") \
             .join('itemCreators', 'creators.creatorID', '=', 'itemCreators.creatorID') \
-            .where('itemCreators.itemID', '=', item['itemID']) \
+            .where_not_in('itemCreators.creatorTypeID', [CREATOR_TYPES__EDITOR])\
+            .where('itemCreators.itemID', '=', item['itemID'])\
+            .order_by('orderIndex')\
             .get()
 
         item['title'] = [x['value'] for x in item['metadata'] if x['fieldName'] == 'title'][0]

@@ -6,6 +6,7 @@ from masoniteorm.query import QueryBuilder
 ITEM_DATA_FIELD__TITLE = 1
 ITEM_TYPE__ATTACHMENT = 2
 PRIMARY_COLLECTION_ID = 14
+CREATOR_TYPES__EDITOR = 10
 
 
 class AuthorsController(Controller):
@@ -17,7 +18,9 @@ class AuthorsController(Controller):
         return view.render("authors.graph")
 
     def show(self, view: View, request: Request):
-        author = QueryBuilder().on('zotero').table("creators").where('creatorID', '=', request.param('creator_id')).first()
+        author = QueryBuilder().on('zotero').table("creators")\
+            .where('creatorID', '=', request.param('creator_id'))\
+            .first()
         return view.render("authors.show", {'author': author})
 
     def api_index(self):
@@ -31,6 +34,7 @@ class AuthorsController(Controller):
             .join('itemCreators', 'creators.creatorID', '=', 'itemCreators.creatorID')\
             .join('items', 'items.itemID', '=', 'itemCreators.itemID')\
             .where('items.libraryID', '=', 1)\
+            .where_not_in('itemCreators.creatorTypeID', [CREATOR_TYPES__EDITOR])\
             .right_join('deletedItems', 'items.itemID', '=', 'deletedItems.itemID', ) \
             .where_null('deletedItems.dateDeleted') \
             .join('itemData', 'items.itemID', '=', 'itemData.itemID') \
@@ -58,6 +62,7 @@ class AuthorsController(Controller):
             .join('itemCreators', 'creators.creatorID', '=', 'itemCreators.creatorID')\
             .join('items', 'items.itemID', '=', 'itemCreators.itemID')\
             .where('items.libraryID', '=', 1)\
+            .where_not_in('itemCreators.creatorTypeID', [CREATOR_TYPES__EDITOR])\
             .right_join('deletedItems', 'items.itemID', '=', 'deletedItems.itemID', ) \
             .where_null('deletedItems.dateDeleted') \
             .join('itemData', 'items.itemID', '=', 'itemData.itemID') \
@@ -110,6 +115,7 @@ class AuthorsController(Controller):
             .right_join('deletedItems', 'items.itemID', '=', 'deletedItems.itemID', ) \
             .where_null('deletedItems.dateDeleted') \
             .where('items.libraryID', '=', 1)\
+            .where_not_in('itemCreators.creatorTypeID', [CREATOR_TYPES__EDITOR])\
             .join('itemData', 'items.itemID', '=', 'itemData.itemID') \
             .join('itemDataValues', 'itemData.valueID', '=', 'itemDataValues.valueID') \
             .join('collectionItems', 'items.itemID', '=', 'collectionItems.itemID')\

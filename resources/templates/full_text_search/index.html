@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block css %}
+<style>
+    .sr-only {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block title %}
+Survero - Paper Survey Application
+{% endblock %}
+
+{% block content %}
+<script>
+    TAG_GROUP_GRAPHS__SORT_NUMERICALLY = {{ config('application.TAG_GROUP_GRAPHS__SORT_NUMERICALLY')|tojson }};
+</script>
+<div class="container">
+    {% raw %}
+    <div id="app" v-cloak>
+        <input type="text"
+               class="form-control"
+               v-model="query"
+               @keyup.enter="reload">
+
+        <div>
+            Alternative Words:
+            <ul>
+                <li v-for="alt in alternatives">
+                    <span style="cursor: pointer;" v-on:click="addAlt(alt)">{{ alt }} (+ add word)</span>
+                </li>
+            </ul>
+        </div>
+
+        <div>
+            {{ items.length }} Results,
+        </div>
+
+        <ol>
+            <li v-for="it in items">
+                <a v-bind:href="'/papers/' + it.key">
+                    {{ it.title}}
+                </a>
+            </li>
+        </ol>
+    </div>
+    {% endraw %}
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    var app = null;
+    window.onload = () => {
+        Vue.component('plotly', Plotly);
+
+        app = new Vue({
+            el: '#app',
+            data() {
+                return {
+                    items: [],
+                    alternatives: [],
+                    query: [],
+                }
+            },
+            methods: {
+                reload() {
+                    axios.get('/api/search?query=' + this.query)
+                        .then(response => {
+                            this.items = response.data;
+                        });
+                    axios.get('/api/search/alternatives?query=' + this.query)
+                        .then(response => {
+                            this.alternatives = response.data;
+                        });
+                },
+                addAlt(word) {
+                    this.query += " " + word;
+                    this.reload();
+                },
+            },
+        });
+    }
+</script>
+{% endblock %}

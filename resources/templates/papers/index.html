@@ -22,7 +22,7 @@ Survero - Paper Survey Application
             </strong>
         </div>
         <div>
-            {{ items.filter(x => !x.needs_review).length }} / {{ items.length }} Papers. ({{ (1 - (items.filter(x => !x.needs_review).length / items.length)).toFixed(2) * 100 }}% Remaining)
+            {{ items.filter(x => !x.needs_review).length }} / {{ items.length }} Papers. ({{ ((1 - (items.filter(x => !x.needs_review).length / items.length)) * 100).toFixed(2) }}% Remaining)
         </div>
         <div>
             <span class="text-success">{{ num_collections_completed() }} Collections Completed</span>,
