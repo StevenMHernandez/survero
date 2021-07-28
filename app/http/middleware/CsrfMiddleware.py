@@ -13,6 +13,7 @@ class CsrfMiddleware(Middleware):
         '/api/notes',
         '/api/notes/@id',
         '/api/tags/update',
+        '/api/tags/@id',
     ]
 
     """Whether or not the CSRF token should be changed on every request."""

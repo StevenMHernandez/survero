@@ -50,6 +50,17 @@ class FullTextSearchController(Controller):
             .order_by('title', 'asc') \
             .get()
 
+        tags = QueryBuilder().on('sqlite').table('tags')\
+            .where_in('paper_key', [it['key'] for it in items])\
+            .select_raw('paper_key, substr(tag, 0, instr(tag, \':\')) as tag_group')\
+            .get()
+
+        def add_additional_fields(it):
+            it['tag_groups'] = Collection([t['tag_group'] for t in tags if t['paper_key'] == it['key'] and t['tag_group'] != '']).unique().serialize()
+            return it
+
+        items = [add_additional_fields(it) for it in items]
+
         return items
 
     def api_alternatives(self, request: Request):

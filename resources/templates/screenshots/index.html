@@ -19,8 +19,14 @@ Survero - Paper Survey Application
         <div>
             {{ screenshots.length }} Unique Screenshots.
         </div>
+        <div>
+            <label>
+                <input type="checkbox" v-model="sort_randomly" v-on:change="sort_screenshots()"> Sort Randomly?
+            </label>
+        </div>
         <div v-for="s in screenshots">
             <a v-bind:href="'/papers/' + s.paper_key">
+                    <small>{{ s.created_at.split("T")[0] }} - {{ s.paper_title }}</small><br>
                 <b-img thumbnail fluid v-bind:src="'/uploads/' + s.file_name" style="margin-bottom: 80px; width: 50%;"></b-img>
             </a>
         </div>
@@ -37,6 +43,7 @@ Survero - Paper Survey Application
             el: '#app',
             data() {
                 return {
+                    sort_randomly: true,
                     screenshots: [],
                 }
             },
@@ -45,7 +52,17 @@ Survero - Paper Survey Application
                     axios.get('/api/screenshots')
                         .then(response => {
                             this.screenshots = response.data;
+                            this.sort_screenshots();
                         });
+                },
+                sort_screenshots() {
+                    if (this.sort_randomly) {
+                        this.screenshots = this.screenshots.sort(_ => 0.5 - Math.random())
+                    } else {
+                        this.screenshots = this.screenshots.sort((x,y) => {
+                            return Date.parse(x.created_at) < Date.parse(y.created_at)
+                        })
+                    }
                 }
             },
             mounted() {

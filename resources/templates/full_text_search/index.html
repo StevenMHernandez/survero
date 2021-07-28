@@ -5,6 +5,14 @@
     .sr-only {
         display: none;
     }
+    .card {
+        margin-bottom: 10px;
+        max-height: 200px;
+        overflow: auto;
+    }
+    textarea {
+        margin-bottom: 10px;
+    }
 </style>
 {% endblock %}
 
@@ -14,31 +22,58 @@ Survero - Paper Survey Application
 
 {% block content %}
 <script>
-    TAG_GROUP_GRAPHS__SORT_NUMERICALLY = {{ config('application.TAG_GROUP_GRAPHS__SORT_NUMERICALLY')|tojson }};
+    APP_URL = {{ config('application.URL')|tojson }};
 </script>
 <div class="container">
     {% raw %}
     <div id="app" v-cloak>
         <input type="text"
+               placeholder="Search."
                class="form-control"
                v-model="query"
                @keyup.enter="reload">
 
-        <div>
+        <div v-if="alternatives.length > 0">
             Alternative Words:
-            <ul>
-                <li v-for="alt in alternatives">
-                    <span style="cursor: pointer;" v-on:click="addAlt(alt)">{{ alt }} (+ add word)</span>
-                </li>
-            </ul>
+            <div class="card bg-light">
+                <div class="card-body">
+                    <ul>
+                        <li v-for="alt in alternatives">
+                            <span style="cursor: pointer;" v-on:click="addAlt(alt)">{{ alt }} (+ add word)</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
 
+        <div v-if="Object.keys(tag_groups_to_hide).length > 0">
+            Filter out items that already have the following tag groups:
+            <div class="card bg-light">
+                    <div class="card-body">
+                    <ul>
+                        <li v-for="tg in Object.keys(tag_groups_to_hide).sort()">
+                            <label>
+                                <input type="checkbox" v-model="tag_groups_to_hide[tg]" v-on:change="toggleItemVisibility">
+                                {{ tg }}
+                            </label>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="items.filter(it => it.is_visible).length > 0">
+            Open all {{ items.filter(it => it.is_visible).length }} links from your Terminal.
+            <textarea class="form-control" style="height: 100px" v-if="items.length > 0">{{ items.filter(it => it.is_visible).map(it => "open " + APP_URL + "/papers/" + it.key + "\n").reduce((x,y) => x + y, '').trim() }}</textarea>
+        </div>
+
+
         <div>
-            {{ items.length }} Results,
+            Showing {{ items.filter(it => it.is_visible).length }} results out of {{ items.length }} in total.
         </div>
 
         <ol>
-            <li v-for="it in items">
+            <li v-for="it in items" v-if="it.is_visible">
                 <a v-bind:href="'/papers/' + it.key">
                     {{ it.title}}
                 </a>
@@ -59,7 +94,9 @@ Survero - Paper Survey Application
             el: '#app',
             data() {
                 return {
+                    APP_URL: APP_URL,
                     items: [],
+                    tag_groups_to_hide: {},
                     alternatives: [],
                     query: [],
                 }
@@ -68,7 +105,20 @@ Survero - Paper Survey Application
                 reload() {
                     axios.get('/api/search?query=' + this.query)
                         .then(response => {
-                            this.items = response.data;
+                            this.items = response.data.map(it => {
+                                it['is_visible'] = true;
+                                return it
+                            });
+
+                            this.items.forEach(it => {
+                                it['tag_groups'].forEach(tg => {
+                                    if (!this.tag_groups_to_hide.hasOwnProperty(tg)) {
+                                        this.tag_groups_to_hide[tg] = false;
+                                    }
+                                });
+                            });
+
+                            this.toggleItemVisibility();
                         });
                     axios.get('/api/search/alternatives?query=' + this.query)
                         .then(response => {
@@ -79,6 +129,27 @@ Survero - Paper Survey Application
                     this.query += " " + word;
                     this.reload();
                 },
+                itemShouldBeVisible(it) {
+                    console.log(it)
+                    var should = !it.tag_groups.map(tg => {
+                        return this.tag_groups_to_hide[tg]
+                    }).reduce((x, y) => { return x || y }, false)
+
+                    console.log(should)
+                    return should
+                },
+                toggleItemVisibility() {
+                    // this.items = this.items.map(it => {
+                    //     it['is_visible'] = this.itemShouldBeVisible(it)
+                    //     return it
+                    // })
+
+                    for (var i = 0; i < this.items.length; i++) {
+                        this.items[i]['is_visible'] = this.itemShouldBeVisible(this.items[i])
+                    }
+
+                    console.log(this.items.map(it => it['is_visible']))
+                }
             },
         });
     }
