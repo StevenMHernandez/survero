@@ -42,13 +42,13 @@ Survero - Paper Survey Application
             n_tags={{ tags_per_group[tg].map(t => t.num_tags).reduce((a, b) => a + b, 0) }}
 
             <plotly :data="data[tg]" :layout="layout[tg]" :display-mode-bar="false"></plotly>
-            <ul>
+            <ol>
                 <li v-for="t in tags_per_group[tg]">
                     <span v-on:click="showModel(t.tag_id, t.tag)">
                         {{ t.tag }} ({{ t.num_tags }})
                     </span>
                 </li>
-            </ul>
+            </ol>
         </div>
 
 

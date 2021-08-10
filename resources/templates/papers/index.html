@@ -5,6 +5,19 @@
     .sr-only {
         display: none;
     }
+    #bottom_bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        background: #f3f3f3;
+        padding: 8px;
+    }
+    #bottom_bar button {
+        display: inline;
+        width: auto;
+        background: #e2e2e2;
+        padding: 8px;
+    }
 </style>
 {% endblock %}
 
@@ -16,6 +29,16 @@ Survero - Paper Survey Application
 <div class="container">
     {% raw %}
     <div id="app" v-cloak>
+        <div id="bottom_bar">
+            <button id="refresh" class="form-control" v-on:click="reload()" v-if="!isBusy">
+                Refresh
+            </button>
+            |
+            <label>
+                <input type="checkbox" v-model="show_only_needs_review">
+                Show only <em>Needs Review</em>
+            </label>
+        </div>
         <div v-if="filter_by_tag_group">
             <strong>
             Filtering based on Tag Group: <em>{{ filter_by_tag_group }}</em>.
@@ -33,15 +56,26 @@ Survero - Paper Survey Application
             <label>Group by Collection? <input type="checkbox" v-model="group_by_collection"></label>
         </div>
         <div v-if="!group_by_collection">
-            <b-table striped hover
+            <b-table ref="table"
+                     striped hover
                      :fields="fields"
                      :busy.sync="isBusy"
                      :items="items"
                      :sort-by.sync="sortBy"
                      :sort-desc.sync="sortDesc"
-                     responsive="sm">
+                     responsive="sm"
+                     :filter="sortBy"
+                     :filter-function="filterTable">
                 <template #cell(key)="data">
-                    <a v-bind:href="'/papers/' + data.value">{{ data.value }}</a>
+                    <a v-bind:href="paperUrl(data.value)">{{ data.value }}</a>
+                </template>
+                <template #cell(needs_review)="data">
+                    <span v-if="data.value" class="text-danger">
+                        Needs Review
+                    </span>
+                    <span v-if="!data.value" class="text-success">
+                        Reviewed
+                    </span>
                 </template>
             </b-table>
         </div>
@@ -60,24 +94,27 @@ Survero - Paper Survey Application
             </ul>
             <div v-for="c in collections">
                 <h3 id="c">{{ c }} ({{ items_per_collection[c].filter(x => x.num_tags > 0 || x.num_screenshots > 0 || x.num_notes > 0).length }} / {{ items_per_collection[c].length }})</h3>
-                <b-table striped hover
+                <b-table ref="table"
+                         striped hover
                          :fields="fields"
                          :busy.sync="isBusy"
                          :items="items_per_collection[c]"
                          :sort-by.sync="sortBy"
                          :sort-desc.sync="sortDesc"
-                         responsive="sm">
-                    <template #cell(key)="data">
-                        <a v-bind:href="'/papers/' + data.value">{{ data.value }}</a>
-                    </template>
-                    <template #cell(needs_review)="data">
-                        <span v-if="data.value" class="text-danger">
-                            Needs Review
-                        </span>
-                        <span v-if="!data.value" class="text-success">
-                            Reviewed
-                        </span>
-                    </template>
+                         responsive="sm"
+                         :filter="sortBy"
+                         :filter-function="filterTable">
+                        <template #cell(key)="data">
+                            <a v-bind:href="paperUrl(data.value)">{{ data.value }}</a>
+                        </template>
+                        <template #cell(needs_review)="data">
+                            <span v-if="data.value" class="text-danger">
+                                Needs Review
+                            </span>
+                            <span v-if="!data.value" class="text-success">
+                                Reviewed
+                            </span>
+                        </template>
                 </b-table>
             </div>
         </div>
@@ -102,6 +139,7 @@ Survero - Paper Survey Application
                     isBusy: false,
                     sortBy: 'Title',
                     sortDesc: false,
+                    show_only_needs_review: false,
                     fields: [
                         {key: 'itemID', sortable: true},
                         {key: 'key', sortable: true},
@@ -154,7 +192,15 @@ Survero - Paper Survey Application
                 },
                 num_collections_not_started() {
                     return this.collections.filter(c => this.collectionClass(c) === 'text-danger').length;
-                }
+                },
+                paperUrl(key) {
+                    return this.filter_by_tag_group ?
+                        '/papers/' + key + "?tag_group=" + this.filter_by_tag_group
+                        : '/papers/' + key
+                },
+                filterTable(row, filter) {
+                    return !this.show_only_needs_review || row.needs_review
+                },
             },
             mounted() {
                 this.reload()

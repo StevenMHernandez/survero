@@ -69,7 +69,10 @@
                 </b-input-group>
                 <ul>
                     <li v-for="t in item.tags">
-                        {{ t.tag }}
+                        <span v-bind:class="tagTextColor(t.tag)">
+                            {{ t.tag }}
+                        </span>
+
                         <small class="text-danger" v-on:click="deleteTag(t)">(X)</small>
                     </li>
                     <hr v-if="deletedTags.length > 0">
@@ -113,17 +116,19 @@
 
         Vue.component('vuefullscreenfiledrop', VueFullScreenFileDrop);
         Vue.component('typeahead', VueTypeaheadBootstrap);
-        new Vue({
+        app = new Vue({
             el: '#app',
             data() {
                 return {
                     isBusy: false,
                     item: {},
                     ZOTERO_PATH: '{{ config("application.zotero_path") }}',
-                    new_tag_text: '',
+                    new_tag_text: this.getDefaultTagString(),
                     new_note_text: '',
                     allTags: [],
+                    newlyAddedTags: [],
                     deletedTags: [],
+                    previouslyAddedTag: "",
                 }
             },
             methods: {
@@ -160,7 +165,8 @@
                     });
                 },
                 addTag() {
-                    if (this.new_tag_text !== '') {
+                    if (this.new_tag_text !== '' && this.new_tag_text !== this.getDefaultTagString()) {
+                        this.newlyAddedTags.push(this.new_tag_text);
                         axios({
                             method: "post",
                             url: '/api/tags',
@@ -171,7 +177,8 @@
                             },
                         }).then(response => {
                             this.reload();
-                            this.new_tag_text = '';
+                            this.previouslyAddedTag = this.new_tag_text;
+                            this.new_tag_text = this.getDefaultTagString();
                             this.$refs.typeahead.$refs.input.focus();
                         });
                     }
@@ -208,6 +215,30 @@
                     console.log(e, i);
                     e.target.select();
                     document.execCommand("copy");
+                },
+                tagTextColor(t) {
+                    if (this.newlyAddedTags.indexOf(t) > -1) {
+                        return 'text-success';
+                    }
+
+                    tag_group = new URL(location.href).searchParams.get('tag_group');
+                    if (tag_group && t.indexOf(tag_group) === 0) {
+                        return 'text-info';
+                    }
+
+                    return ''
+                },
+                getDefaultTagString() {
+                    tag_group = new URL(location.href).searchParams.get('tag_group');
+                    if (tag_group) {
+                        return tag_group;
+                    }
+
+                    if (this.previouslyAddedTag && this.previouslyAddedTag.indexOf(":") > -1) {
+                        return this.previouslyAddedTag.substring(0, this.previouslyAddedTag.lastIndexOf(":")) + ": ";
+                    }
+
+                    return "";
                 }
             },
             mounted() {
