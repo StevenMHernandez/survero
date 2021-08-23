@@ -23,7 +23,10 @@ AUTH = {
             "driver": "cookie",
             "model": User,
             "drivers": {  # 'cookie', 'jwt'
-                "jwt": {"reauthentication": True, "lifetime": "60 minutes"}
+                "jwt": {
+                    "reauthentication": True,
+                    "lifetime": "60 minutes"
+                }
             },
         },
     },
