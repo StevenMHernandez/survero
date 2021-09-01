@@ -24,7 +24,11 @@ Survero - Paper Survey Application
                 <a v-bind:href="'/papers/' + n.paper_key" style="text-decoration: none">
                     [{{ n.paper_key }}]
                 </a>
-                {{ n.note }}
+
+                <template v-for="v in splitNoteText(n.note)">
+                    <a v-if="v['isPaperKey']" v-bind:href="'/papers/' +  v['value']">{{ v['value'] }}</a>
+                    <span v-if="!v['isPaperKey']">{{ v['value'] }}</span>
+                </template>
             </li>
         </ol>
     </div>
@@ -49,6 +53,21 @@ Survero - Paper Survey Application
                         .then(response => {
                             this.notes = response.data;
                         });
+                },
+                splitNoteText(text) {
+                    var reg = /([A-Z0-9]{8})[ \.]/g;
+                    var ignore_list = [
+                        'LABELLED',
+                        'TERRIBLE',
+                        'MPORTANT',
+                    ];
+                    return text.split(reg).map(x => {
+                        console.log(x.match(reg));
+                        return {
+                            'value': x,
+                            'isPaperKey': !!x.match(reg) && ignore_list.indexOf(x.match(reg)[0]) < 0,
+                        }
+                    })
                 }
             },
             mounted() {

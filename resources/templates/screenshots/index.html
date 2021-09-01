@@ -26,7 +26,8 @@ Survero - Paper Survey Application
         </div>
         <div v-for="s in screenshots">
             <a v-bind:href="'/papers/' + s.paper_key">
-                    <small>{{ s.created_at.split("T")[0] }} - {{ s.paper_title }}</small><br>
+                    <small>{{ s.paper_title }}</small><br>
+                    <small>{{s.user.name}} {{ s.created_at.split("T")[0] }}</small><br>
                 <b-img thumbnail fluid v-bind:src="'/uploads/' + s.file_name" style="margin-bottom: 80px; width: 50%;"></b-img>
             </a>
         </div>

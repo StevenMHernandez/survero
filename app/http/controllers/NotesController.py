@@ -16,6 +16,7 @@ class NotesController(Controller):
         note = Note.create({
             'paper_key': request.input('paper_key'),
             'note': request.input('note'),
+            'user_id': request.user().id,
         })
         return {"status": "success", "model": note.serialize()}
 

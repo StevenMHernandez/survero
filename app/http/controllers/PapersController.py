@@ -108,10 +108,10 @@ class PapersController(Controller):
 
         item['title'] = [x['value'] for x in item['metadata'] if x['fieldName'] == 'title'][0]
 
-        item['screenshots'] = Screenshot.where('paper_key', '=', request.param('key')).get().serialize()
+        item['screenshots'] = Screenshot.where('paper_key', '=', request.param('key')).with_('user').get().serialize()
 
-        item['tags'] = Tag.where('paper_key', '=', request.param('key')).get().serialize()
+        item['tags'] = Tag.where('paper_key', '=', request.param('key')).with_('user').get().serialize()
 
-        item['notes'] = Note.where('paper_key', '=', request.param('key')).get().serialize()
+        item['notes'] = Note.where('paper_key', '=', request.param('key')).with_('user').get().serialize()
 
         return item

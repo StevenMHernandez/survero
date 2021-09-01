@@ -5,6 +5,14 @@
     .sr-only {
         display: none;
     }
+    ul#notes {
+        margin-top:15px;
+    }
+    ul#notes li {
+        margin-bottom: 15px;
+        border-bottom: 1px solid #e0e0e0;
+        padding-bottom: 15px;
+    }
 </style>
 {% endblock %}
 
@@ -95,9 +103,16 @@
                         <b-button v-on:click="addNote">Create</b-button>
                     </b-input-group-append>
                 </b-input-group>
-                <ul>
-                    <li v-for="n in item.notes">
-                        {{ n.note }}
+                <ul id="notes">
+                    <li v-for="n in item.notes.slice().reverse()">
+                        <template v-for="v in splitNoteText(n.note)">
+                            <a v-if="v['isPaperKey']" v-bind:href="'/papers/' +  v['value']">{{ v['value'] }}</a>
+                            <span v-if="!v['isPaperKey']">{{ v['value'] }}</span>
+                        </template>
+                        <br>
+                        <small>
+                            <span class="text-success">{{ n.user.name }}</span>
+                            : <em>{{ n.created_at }}</em></small>
                     </li>
                 </ul>
             </b-col>
@@ -239,6 +254,21 @@
                     }
 
                     return "";
+                },
+                splitNoteText(text) {
+                    var reg = /([A-Z0-9]{8})[ \.]/g;
+                    var ignore_list = [
+                        'LABELLED',
+                        'TERRIBLE',
+                        'MPORTANT',
+                    ];
+                    return text.split(reg).map(x => {
+                        console.log(x.match(reg));
+                        return {
+                            'value': x,
+                            'isPaperKey': !!x.match(reg) && ignore_list.indexOf(x.match(reg)[0]) < 0,
+                        }
+                    })
                 }
             },
             mounted() {

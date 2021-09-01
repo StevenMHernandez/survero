@@ -50,6 +50,7 @@ class TagsController(Controller):
         tag = Tag.create({
             'paper_key': request.input('paper_key'),
             'tag': request.input('tag'),
+            'user_id': request.user().id,
         })
         return {"status": "success", "model": tag.serialize()}
 

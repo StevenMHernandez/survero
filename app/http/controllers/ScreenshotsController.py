@@ -17,12 +17,13 @@ class ScreenshotsController(Controller):
         file_name = upload.driver('disk').store(request.input('upload'))
         screenshot = Screenshot.create({
             'paper_key': request.input('paper_key'),
-            'file_name': file_name
+            'file_name': file_name,
+            'user_id': request.user().id,
         })
         return {"status": "success", "model": screenshot.serialize()}
 
     def api_index(self):
-        screenshots = Screenshot.order_by('created_at', 'DESC').all().serialize()
+        screenshots = Screenshot.order_by('created_at', 'DESC').with_('user').all().serialize()
 
         items = QueryBuilder().on('zotero').table("items")\
             .where_in('items.key', [s['paper_key'] for s in screenshots])\
