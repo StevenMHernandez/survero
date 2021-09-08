@@ -45,6 +45,7 @@
             <li><a href="/screenshots" v-bind:class="isActive('screenshots')">Screenshots</a></li>
             <li><a href="/notes" v-bind:class="isActive('notes')">Notes</a></li>
             <li><a href="/authors" v-bind:class="isActive('authors')">Authors</a> (<a href="/authors/graph">Graph</a>)</li>
+            <li><a href="/publications" v-bind:class="isActive('publications')">Publications</a></li>
             <li><a href="/search" v-bind:class="isActive('search')">Full Text Search</a></li>
         </ul>
     </div>
@@ -61,7 +62,6 @@
             el: '#nav',
             methods: {
                 isActive(tab) {
-                    console.log("TESTE", tab, window.location.pathname.split("/")[1]);
                     return tab === window.location.pathname.split("/")[1] ? 'active': ''
                 },
             }

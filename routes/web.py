@@ -29,6 +29,8 @@ ROUTES = [
         Get("/authors/graph", "AuthorsController@graph"),
         Get("/authors/@creator_id", "AuthorsController@show"),
 
+        Get("/publications/", "PublicationsController@index"),
+
         Get("/tags/", "TagsController@index"),
         Get("/tags/@tag", "TagsController@show"),
 
@@ -44,6 +46,8 @@ ROUTES = [
         Get("/api/authors/", "AuthorsController@api_index"),
         Get("/api/authors/graph", "AuthorsController@api_graph"),
         Get("/api/authors/@creator_id", "AuthorsController@api_show"),
+
+        Get("/api/publications/", "PublicationsController@api_index"),
 
         Get("/api/tags", "TagsController@api_index"),
         Get("/api/tags/@tag_id", "TagsController@api_show"),

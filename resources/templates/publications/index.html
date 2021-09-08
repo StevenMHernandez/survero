@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block css %}
+<style>
+    .sr-only {
+        display: none;
+    }
+    .modalButton {
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block title %}
+Survero - Paper Survey Application
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% raw %}
+    <div id="app" v-cloak>
+        <div>
+            {{ publications.length }} Unique Publications.
+        </div>
+        <b-table striped hover
+                 :fields="fields"
+                 :busy.sync="isBusy"
+                 :items="publications"
+                 :sort-by.sync="sortBy"
+                 :sort-desc.sync="sortDesc"
+                 responsive="sm">
+                <template #cell(publicationTitle)="data">
+                    <a v-on:click="openModal(data.value)" class="modalButton">{{ data.value }}</a>
+                </template>
+        </b-table>
+
+        <b-modal ref="my-modal" hide-footer v-bind:title="selected_publication.title">
+            <b-list-group>
+                <b-list-group-item v-bind:href="'/papers/' + p.key" v-for="p in papers" v-if="p.publication == selected_publication.title">{{ p.title }}</b-list-group-item>
+            </b-list-group>
+        </b-modal>
+    </div>
+    {% endraw %}
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    var app = null;
+    window.onload = () => {
+        app = new Vue({
+            el: '#app',
+            data() {
+                return {
+                    publications: [],
+                    papers: [],
+                    isBusy: false,
+                    sortBy: 'count',
+                    sortDesc: true,
+                    fields: [
+                        {key: 'publicationTitle', sortable: true},
+                        {key: 'count', sortable: true},
+                    ],
+                    selected_publication: {
+                        'title': '',
+                        'papers': [],
+                    },
+                }
+            },
+            methods: {
+                reload() {
+                    this.isBusy = true;
+                    axios.get('/api/publications')
+                        .then(response => {
+                            this.isBusy = false;
+                            this.publications = response.data.publications;
+                            this.papers = response.data.papers;
+                        });
+                },
+                openModal(publicationTitle) {
+                    this.selected_publication.title = publicationTitle;
+                    this.$refs['my-modal'].show();
+                },
+            },
+            mounted() {
+                this.reload()
+            }
+        });
+    }
+</script>
+{% endblock %}
