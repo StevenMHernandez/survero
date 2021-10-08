@@ -2,10 +2,10 @@ from masonite.view import View
 from masonite.request import Request
 from masonite.controllers import Controller
 from masoniteorm.query import QueryBuilder
+from masonite.helpers import config
 
 ITEM_DATA_FIELD__TITLE = 1
 ITEM_TYPE__ATTACHMENT = 2
-PRIMARY_COLLECTION_ID = 14
 CREATOR_TYPES__EDITOR = 10
 
 
@@ -25,7 +25,8 @@ class AuthorsController(Controller):
 
     def api_index(self):
         collections = QueryBuilder().on('zotero').table('collections') \
-            .where('parentCollectionID', '=', PRIMARY_COLLECTION_ID)\
+            .where('parentCollectionID', '=', config('application.PRIMARY_COLLECTION_ID'))\
+            .where_not_in('collectionId', config('application.COLLECTIONS_TO_IGNORE'))\
             .select('collectionID') \
             .get()
         collection_ids = [list(x.values())[0] for x in collections]
@@ -53,7 +54,8 @@ class AuthorsController(Controller):
 
     def api_graph(self):
         collections = QueryBuilder().on('zotero').table('collections') \
-            .where('parentCollectionID', '=', PRIMARY_COLLECTION_ID)\
+            .where('parentCollectionID', '=', config('application.PRIMARY_COLLECTION_ID'))\
+            .where_not_in('collectionId', config('application.COLLECTIONS_TO_IGNORE'))\
             .select('collectionID') \
             .get()
         collection_ids = [list(x.values())[0] for x in collections]

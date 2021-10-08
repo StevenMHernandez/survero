@@ -1,6 +1,7 @@
 """Application Settings."""
 
 import os
+import json
 
 from masonite import env
 
@@ -61,6 +62,16 @@ AUTOLOAD = [
 Path to local PDF files from Zotero 
 """
 ZOTERO_PATH = env('ZOTERO_PATH')
+
+
+"""Primary Collection ID
+ID number of the collection (in your Zotero sqlite database) that you want to be the parent."""
+PRIMARY_COLLECTION_ID = env('PRIMARY_COLLECTION_ID')
+
+"""Child Collections to Ignore
+Ignore this list of collections which are children of PRIMARY_COLLECTION_ID
+"""
+COLLECTIONS_TO_IGNORE = json.loads(env('COLLECTIONS_TO_IGNORE'))
 
 
 """Tag Group Graphs: Sort Numerically

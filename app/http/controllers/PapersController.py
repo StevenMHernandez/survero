@@ -2,6 +2,7 @@ from masonite.view import View
 from masonite.request import Request
 from masonite.controllers import Controller
 from masoniteorm.query import QueryBuilder
+from masonite.helpers import config
 
 from app.Tag import Tag
 from app.Note import Note
@@ -9,7 +10,6 @@ from app.Screenshot import Screenshot
 
 ITEM_DATA_FIELD__TITLE = 1
 ITEM_TYPE__ATTACHMENT = 2
-PRIMARY_COLLECTION_ID = 14
 CREATOR_TYPES__EDITOR = 10
 
 class PapersController(Controller):
@@ -23,8 +23,8 @@ class PapersController(Controller):
 
     def api_index(self, request: Request):
         collections = QueryBuilder().on('zotero').table('collections') \
-            .where('parentCollectionID', '=', PRIMARY_COLLECTION_ID)\
-            .where_not_in('collectionId', [69, 65, 90, 74, 46, 73, 41, 14, 68, 97, 87, 61])\
+            .where('parentCollectionID', '=', config('application.PRIMARY_COLLECTION_ID'))\
+            .where_not_in('collectionId', config('application.COLLECTIONS_TO_IGNORE'))\
             .select('collectionID') \
             .get()
         collection_ids = [list(x.values())[0] for x in collections]
