@@ -1,0 +1,14 @@
+version: '3'
+services:
+
+  survero:
+    build:
+      context: ./
+      dockerfile: docker/Dockerfile
+    command: craft serve -p 12000 -b 0.0.0.0 -i 0.1
+    volumes:
+      - ./:/usr/src/app/
+      - ./volumes/zotero/:/usr/src/db/zotero
+      - ./volumes/survero/:/usr/src/db/survero
+    ports:
+      - 12000:12000
