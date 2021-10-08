@@ -48,6 +48,9 @@
             <li><a href="/publications" v-bind:class="isActive('publications')">Publications</a></li>
             <li><a href="/search" v-bind:class="isActive('search')">Full Text Search</a></li>
         </ul>
+        <small style="margin-right: 10px">
+            Logged in as: {{ auth().name }}
+        </small>
     </div>
 <hr>
 </div>

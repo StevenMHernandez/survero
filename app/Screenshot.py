@@ -4,7 +4,7 @@ from masoniteorm.relationships import belongs_to
 
 class Screenshot(Model):
     __connection__ = "sqlite"
-    __fillable__ = ["paper_key", "file_name"]
+    __fillable__ = ["paper_key", "file_name", "user_id"]
 
     @belongs_to('user_id', 'id')
     def user(self):

@@ -71,7 +71,7 @@ class RegisterController:
         # Login the user
         if auth.login(request.input("email"), request.input("password")):
             # Redirect to the homepage
-            return request.redirect("/home")
+            return request.redirect("/papers")
 
         # Login failed. Redirect to the register page.
         return request.back().with_input()

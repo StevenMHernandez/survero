@@ -26,7 +26,30 @@ vim ~/python/survero/.env
 After this, you should be able to start survero through the terminal and open in a web browser.
 
 ```
+# Start Survero
 docker-compose up -d  # If there are problems, remove `-d` and watch the logs for any error messages.
+```
+
+The following tasks need to be run only the first time you start your server:
+
+```
+# Generate Encryption Key
+docker-compose exec survero python craft key
+
+# Create Database
+docker-compose exec survero python craft migrate
+```
+
+Currently there is no easy way to create a new user. 
+To register a new user open `./routes/web.py` and uncomment the lines starting with:
+
+`Get("/register" ...` and `Post("/register" ...`. After this, head to `http://localhost:12000/register` to create a new account.
+
+These paths are not enabled by default because we usually do not want people registering random accounts.
+
+# Create Your User
+```
+# Open in Browser
 open http://localhost:12000
 ```
 
