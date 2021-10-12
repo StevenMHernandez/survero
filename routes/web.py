@@ -57,9 +57,11 @@ ROUTES = [
 
         Get("/api/screenshots", "ScreenshotsController@api_index"),
         Post("/api/screenshots", "ScreenshotsController@create"),
+        Delete("/api/screenshots/@id", "ScreenshotsController@delete"),
 
         Get("/api/notes", "NotesController@api_index"),
         Post("/api/notes", "NotesController@create"),
+        Delete("/api/notes/@id", "NotesController@delete"),
 
         Get("/api/search", "FullTextSearchController@api_index"),
         Get("/api/search/alternatives", "FullTextSearchController@api_alternatives"),

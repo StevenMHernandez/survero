@@ -1,8 +1,10 @@
+import os
 from masonite import Upload
 from masonite.view import View
 from masonite.request import Request
 from masonite.controllers import Controller
 from masoniteorm.query import QueryBuilder
+from masonite.helpers import config
 
 from app.Screenshot import Screenshot
 
@@ -21,6 +23,13 @@ class ScreenshotsController(Controller):
             'user_id': request.user().id,
         })
         return {"status": "success", "model": screenshot.serialize()}
+
+    def delete(self, request: Request):
+        screenshot = Screenshot.find(request.param('id'))
+        os.remove(f"{config('storage.DRIVERS.disk.location')}/{screenshot.file_name}")
+        Screenshot.where('id', request.param('id')).delete()
+
+        return {"status": "success"}
 
     def api_index(self):
         screenshots = Screenshot.order_by('created_at', 'DESC').with_('user').all().serialize()

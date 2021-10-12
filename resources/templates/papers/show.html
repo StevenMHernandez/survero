@@ -13,6 +13,9 @@
         border-bottom: 1px solid #e0e0e0;
         padding-bottom: 15px;
     }
+    .deletable {
+        cursor: pointer;
+    }
 </style>
 {% endblock %}
 
@@ -40,8 +43,11 @@
             <h6 class="text-muted" v-for="c in item.collections">(Collection: {{ c.collectionName }})</h6>
             <b-container fluid class="p-4 bg-dark">
                 <b-row>
-                    <b-col v-for="s in item.screenshots">
+                    <b-col v-for="s in item.screenshots" class="text-center">
                         <b-img thumbnail fluid v-bind:src="'/uploads/' + s.file_name"></b-img>
+                        <div>
+                            <small class="text-danger deletable" v-on:click="deleteScreenshot(s)">Delete</small>
+                        </div>
                     </b-col>
                 </b-row>
             </b-container>
@@ -81,7 +87,7 @@
                             {{ t.tag }}
                         </span>
 
-                        <small class="text-danger" v-on:click="deleteTag(t)">(X)</small>
+                        <small class="text-danger deletable" v-on:click="deleteTag(t)">(X)</small>
                     </li>
                     <hr v-if="deletedTags.length > 0">
                     <li v-for="t in deletedTags" class="text-muted">
@@ -112,7 +118,9 @@
                         <br>
                         <small>
                             <span class="text-success">{{ n.user.name }}</span>
-                            : <em>{{ n.created_at }}</em></small>
+                            : <em>{{ n.created_at }}</em>
+                            <em class="text-danger deletable" v-on:click="deleteNote(n)">Delete</em>
+                        </small>
                     </li>
                 </ul>
             </b-col>
@@ -203,6 +211,28 @@
                     axios({
                         method: "delete",
                         url: '/api/tags/' + tag.id,
+                        data: {
+                            '__token': '{{ csrf_token }}',
+                        },
+                    }).then(response => {
+                        this.reload();
+                    });
+                },
+                deleteNote(note) {
+                    axios({
+                        method: "delete",
+                        url: '/api/notes/' + note.id,
+                        data: {
+                            '__token': '{{ csrf_token }}',
+                        },
+                    }).then(response => {
+                        this.reload();
+                    });
+                },
+                deleteScreenshot(screenshot) {
+                    axios({
+                        method: "delete",
+                        url: '/api/screenshots/' + screenshot.id,
                         data: {
                             '__token': '{{ csrf_token }}',
                         },

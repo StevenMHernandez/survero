@@ -20,6 +20,10 @@ class NotesController(Controller):
         })
         return {"status": "success", "model": note.serialize()}
 
+    def delete(self, request: Request):
+        Note.where('id', request.param('id')).delete()
+        return {"status": "success"}
+
     def api_index(self):
         notes = Collection(Note.all())
         notes.reverse()
