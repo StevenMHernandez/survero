@@ -13,14 +13,14 @@ To use this tool, first you will need to add the `zotero.sqlite` file from your 
 There are two options for adding the `zotero.sqlite` file into the project. 
 **YOU** must decide which one is safest and most applicable to your unique situation.
 
-1. Symlink `ln -s /Users/your_name/Zotero/zotero.sqlite ~/volumes/zotero/` (on Mac)
-2. Copy the file `cp /Users/your_name/Zotero/zotero.sqlite ~/volumes/zotero/` 
+1. Copy the file `cp /Users/your_name/Zotero/zotero.sqlite ./volumes/zotero/` (on Mac)
+2. Symlink `ln -s /Users/your_name/Zotero/zotero.sqlite ./volumes/zotero/` (on Mac)
 
 Next, you will want to edit the `.env` file:
 
 ```
-cp ~/python/survero/.env-example ~/python/survero/.env 
-vim ~/python/survero/.env
+cp ./.env-example ./.env 
+vim ./.env
 ```
 
 After this, you should be able to start survero through the terminal and open in a web browser.
@@ -53,4 +53,4 @@ These paths are not enabled by default because we usually do not want people reg
 open http://localhost:12000
 ```
 
-Survero stores all new data such as tags, screenshots-metadata in a new `.sqlite` file located at `~/volumes/survero/survero.sqlite`.
+Survero stores all new data such as tags, screenshots-metadata in a new `.sqlite` file located at `./volumes/survero/survero.sqlite`.
