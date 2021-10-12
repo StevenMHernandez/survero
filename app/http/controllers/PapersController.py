@@ -82,7 +82,7 @@ class PapersController(Controller):
         item['collections'] = QueryBuilder().on('zotero').table('collections')\
             .join('collectionItems', 'collections.collectionID', '=', 'collectionItems.collectionID')\
             .where('collectionItems.itemID', '=', item['itemID'])\
-            .where('parentCollectionID', '=', PRIMARY_COLLECTION_ID)\
+            .where('parentCollectionID', '=', config('application.PRIMARY_COLLECTION_ID'))\
             .all()
 
         item['attachments'] = QueryBuilder().on('zotero') \
