@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block css %}
+<style>
+    .sr-only {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block title %}
+Survero - Paper Survey Application
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% raw %}
+    <div id="app" v-cloak>
+
+        <p>
+        Select which collections should be enabled as workspaces.
+        When enabled, all papers in the selected collection and immediate children of the selected collection will be grouped together into a new "workspace".
+        Notes, Screenshots, Tags, Authors etc. will appear only for papers within the given workspace.
+        </p>
+        <p>
+        Note: disabling workspaces will not delete any notes/screenshots/tags/etc. Workspaces can be re-enabled again in the future to view your workspace data.
+        </p>
+
+        <hr>
+
+        <render-tree v-bind:tree="collection_tree"></render-tree>
+
+
+    </div>
+    {% endraw %}
+</div>
+{% endblock %}
+
+{% block script %}
+{#  @See: https://v3.vuejs.org/guide/migration/inline-template-attribute.html#_3-x-syntax  #}
+{% raw %}
+<script type="text/html" id="render-tree-template">
+  <ul>
+      <li v-for="c in tree" v-bind:key="c.collection.collectionID">
+          <div>
+              <label>
+                  <input type="checkbox" v-model="c.collection.is_workspace" v-on:change="toggleWorkspace(c.collection)">
+                  <a v-if="c.collection.is_workspace" v-bind:href="'/workspaces/' + c.collection.key + '/papers'">
+                    {{ c.collection.collectionName }}
+                  </a>
+                  <span v-if="!c.collection.is_workspace">{{ c.collection.collectionName }}</span>
+              </label>
+              <render-tree v-bind:tree="c.children"></render-tree>
+          </div>
+      </li>
+  </ul>
+</script>
+{% endraw %}
+
+<script>
+    var app = null;
+
+    Vue.component('render-tree', {
+        template: '#render-tree-template',
+        props: ['tree'],
+        methods: {
+            toggleWorkspace(collection) {
+                if (collection.is_workspace) {
+                    axios({
+                        method: "post",
+                        url: '/api/workspaces',
+                        data: {
+                            '__token': '{{ csrf_token }}',
+                            'collection_key': collection.key,
+                        },
+                    });
+                } else {
+                    axios({
+                        method: "delete",
+                        url: '/api/workspaces/' + collection.key,
+                        data: {
+                            '__token': '{{ csrf_token }}',
+                        },
+                    });
+                }
+            }
+        }
+    });
+
+
+    window.onload = () => {
+        app = new Vue({
+            el: '#app',
+            data() {
+                return {
+                    collections: [],
+                    child_collections: {},
+                    collection_tree: [],
+                }
+            },
+            methods: {
+                reload() {
+                    this.isBusy = true;
+                    axios.get('/api/workspaces')
+                        .then(response => {
+                            this.isBusy = false;
+                            this.collections = response.data;
+                            this.collections.forEach(c => {
+                                if (!this.child_collections.hasOwnProperty(c.parentCollectionID)) {
+                                    this.child_collections[c.parentCollectionID] = []
+                                }
+                                this.child_collections[c.parentCollectionID].push(c)
+                            });
+
+                            let self = this
+                            function buildTree(parentCollectionId) {
+                                if (!self.child_collections.hasOwnProperty(parentCollectionId)) {
+                                    return [];
+                                }
+                                return self.child_collections[parentCollectionId].map(c => {
+                                    return {
+                                        collection: c,
+                                        children: buildTree(c.collectionID),
+                                    }
+                                })
+                            }
+
+                            this.collection_tree = buildTree(null);
+                        });
+                },
+            },
+            mounted() {
+                this.reload()
+            }
+        });
+    }
+</script>
+{% endblock %}

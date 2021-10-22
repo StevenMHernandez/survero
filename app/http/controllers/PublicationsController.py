@@ -4,6 +4,8 @@ from masonite.controllers import Controller
 from masoniteorm.query import QueryBuilder
 from masonite.helpers import config
 
+from app.services.WorkspaceService import WorkspaceService
+
 ITEM_DATA_FIELD__TITLE = 1
 ITEM_TYPE__ATTACHMENT = 2
 CREATOR_TYPES__EDITOR = 10
@@ -11,21 +13,11 @@ ITEM_DATA_FIELD__PUBLICATION_TITLE = 37
 
 
 class PublicationsController(Controller):
+    def index(self, view: View, workspaceService: WorkspaceService):
+        return view.render("publications.index", {'workspace': workspaceService.workspace})
 
-    def index(self, view: View):
-        return view.render("publications.index")
-
-    def graph(self, view: View):
-        return view.render("publications.graph")
-
-    def api_index(self):
-
-        collections = QueryBuilder().on('zotero').table('collections') \
-            .where('parentCollectionID', '=', config('application.PRIMARY_COLLECTION_ID'))\
-            .where_not_in('collectionId', config('application.COLLECTIONS_TO_IGNORE'))\
-            .select('collectionID') \
-            .get()
-        collection_ids = [list(x.values())[0] for x in collections]
+    def api_index(self, workspaceService: WorkspaceService):
+        collection_ids = workspaceService.get_collection_ids()
 
         publications = QueryBuilder().on('zotero').table('itemDataValues') \
             .join('itemData', 'itemDataValues.valueID', '=', 'itemData.valueID') \

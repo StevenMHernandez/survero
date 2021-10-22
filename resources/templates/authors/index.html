@@ -27,7 +27,7 @@ Survero - Paper Survey Application
                  :sort-desc.sync="sortDesc"
                  responsive="sm">
             <template #cell(creatorID)="data">
-                <a v-bind:href="'/authors/' + data.value">{{ data.value }}</a>
+                <a v-bind:href="'/workspaces/' + workspace.key + '/authors/' + data.value">{{ data.value }}</a>
             </template>
         </b-table>
     </div>
@@ -38,11 +38,13 @@ Survero - Paper Survey Application
 {% block script %}
 <script>
     var app = null;
+    workspace = {{ workspace|tojson }}
     window.onload = () => {
         app = new Vue({
             el: '#app',
             data() {
                 return {
+                    workspace: workspace,
                     items: [],
                     isBusy: false,
                     sortBy: 'num_papers',
@@ -58,7 +60,7 @@ Survero - Paper Survey Application
             methods: {
                 reload() {
                     this.isBusy = true;
-                    axios.get('/api/authors')
+                    axios.get('/api/workspaces/' + this.workspace.key + '/authors')
                         .then(response => {
                             this.isBusy = false;
                             this.items = response.data;

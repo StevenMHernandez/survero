@@ -4,6 +4,8 @@ from masonite.controllers import Controller
 from masoniteorm.query import QueryBuilder
 from masonite.helpers import config
 
+from app.services.WorkspaceService import WorkspaceService
+
 ITEM_DATA_FIELD__TITLE = 1
 ITEM_TYPE__ATTACHMENT = 2
 CREATOR_TYPES__EDITOR = 10
@@ -11,25 +13,20 @@ CREATOR_TYPES__EDITOR = 10
 
 class AuthorsController(Controller):
 
-    def index(self, view: View):
-        return view.render("authors.index")
+    def index(self, view: View, workspaceService: WorkspaceService):
+        return view.render("authors.index", {'workspace': workspaceService.workspace})
 
-    def graph(self, view: View):
-        return view.render("authors.graph")
+    def graph(self, view: View, request: Request, workspaceService: WorkspaceService):
+        return view.render("authors.graph", {'workspace': workspaceService.workspace})
 
-    def show(self, view: View, request: Request):
+    def show(self, view: View, request: Request, workspaceService: WorkspaceService):
         author = QueryBuilder().on('zotero').table("creators")\
             .where('creatorID', '=', request.param('creator_id'))\
             .first()
-        return view.render("authors.show", {'author': author})
+        return view.render("authors.show", {'author': author, 'workspace': workspaceService.workspace})
 
-    def api_index(self):
-        collections = QueryBuilder().on('zotero').table('collections') \
-            .where('parentCollectionID', '=', config('application.PRIMARY_COLLECTION_ID'))\
-            .where_not_in('collectionId', config('application.COLLECTIONS_TO_IGNORE'))\
-            .select('collectionID') \
-            .get()
-        collection_ids = [list(x.values())[0] for x in collections]
+    def api_index(self, workspaceService: WorkspaceService):
+        collection_ids = workspaceService.get_collection_ids()
 
         authors = QueryBuilder().on('zotero').table("creators")\
             .join('itemCreators', 'creators.creatorID', '=', 'itemCreators.creatorID')\
@@ -52,13 +49,8 @@ class AuthorsController(Controller):
 
         return authors
 
-    def api_graph(self):
-        collections = QueryBuilder().on('zotero').table('collections') \
-            .where('parentCollectionID', '=', config('application.PRIMARY_COLLECTION_ID'))\
-            .where_not_in('collectionId', config('application.COLLECTIONS_TO_IGNORE'))\
-            .select('collectionID') \
-            .get()
-        collection_ids = [list(x.values())[0] for x in collections]
+    def api_graph(self, workspaceService: WorkspaceService):
+        collection_ids = workspaceService.get_collection_ids()
 
         authors = QueryBuilder().on('zotero').table("creators")\
             .join('itemCreators', 'creators.creatorID', '=', 'itemCreators.creatorID')\
@@ -110,7 +102,7 @@ class AuthorsController(Controller):
 
         return {'nodes': nodes, 'links': links}
 
-    def api_show(self, request: Request):
+    def api_show(self, request: Request, workspaceService: WorkspaceService):
         author = QueryBuilder().on('zotero').table("creators").where('creatorId', '=', request.param('creator_id')).first()
 
         papers = QueryBuilder().on('zotero').table("items") \
@@ -122,7 +114,8 @@ class AuthorsController(Controller):
             .join('itemDataValues', 'itemData.valueID', '=', 'itemDataValues.valueID') \
             .join('collectionItems', 'items.itemID', '=', 'collectionItems.itemID')\
             .join('collections', 'collections.collectionID', '=', 'collectionItems.collectionID') \
-            .join('itemCreators', 'items.itemID', '=', 'itemCreators.itemID')\
+            .join('itemCreators', 'items.itemID', '=', 'itemCreators.itemID') \
+            .where_in('items.key', workspaceService.get_paper_keys()) \
             .where('itemCreators.creatorID', '=', author['creatorID'])\
             .where('itemData.fieldID', '=', ITEM_DATA_FIELD__TITLE) \
             .where('itemTypeID', '!=', ITEM_TYPE__ATTACHMENT)\
@@ -142,6 +135,7 @@ class AuthorsController(Controller):
 
         author['papers'] = papers_organized
 
-        author['screenshots'] =  QueryBuilder().table('screenshots').where_in('paper_key', papers_organized.keys()).get()
+        screenshots = QueryBuilder().table('screenshots').where_in('paper_key', papers_organized.keys()).get()
+        author['screenshots'] = screenshots if screenshots else []
 
         return author

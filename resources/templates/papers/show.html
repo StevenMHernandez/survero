@@ -35,7 +35,7 @@
             <h5>
                 <span v-for="a,i in item.authors">
                     <span v-if="i>0">,</span>
-                    <a v-bind:href="'/authors/' + a.creatorID">
+                    <a v-bind:href="'/workspaces/' + workspace.key + '/authors/' + a.creatorID">
                         {{a.firstName}} {{a.lastName}}
                     </a>
                 </span>
@@ -109,7 +109,7 @@
                         <b-button v-on:click="addNote">Create</b-button>
                     </b-input-group-append>
                 </b-input-group>
-                <ul id="notes">
+                <ul id="notes" v-if="item.notes && item.notes.length > 0">
                     <li v-for="n in item.notes.slice().reverse()">
                         <template v-for="v in splitNoteText(n.note)">
                             <a v-if="v['isPaperKey']" v-bind:href="'/papers/' +  v['value']">{{ v['value'] }}</a>
@@ -135,14 +135,17 @@
 
 {% block script %}
 <script>
-    window.onload = () => {
+    var app = null;
+    workspace = {{ workspace|tojson }}
 
+    window.onload = () => {
         Vue.component('vuefullscreenfiledrop', VueFullScreenFileDrop);
         Vue.component('typeahead', VueTypeaheadBootstrap);
         app = new Vue({
             el: '#app',
             data() {
                 return {
+                    workspace: workspace,
                     isBusy: false,
                     item: {},
                     ZOTERO_PATH: '{{ config("application.zotero_path") }}',
@@ -156,7 +159,7 @@
             },
             methods: {
                 reload() {
-                    axios.get('/api/papers/{{ item.key }}')
+                    axios.get('/api/workspaces/' + workspace.key + '/papers/{{ item.key }}')
                         .then(response => {
                             this.item = response.data;
                             document.title = this.item.title;
@@ -164,7 +167,7 @@
                                 return x.tag > y.tag
                             });
 
-                            axios.get('/api/tags/')
+                            axios.get('/api/workspaces/' + workspace.key + '/tags/')
                                 .then(response => {
                                     this.allTags = response.data.map(t => {
                                         return t.tag

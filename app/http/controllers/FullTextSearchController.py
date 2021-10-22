@@ -5,24 +5,22 @@ from masoniteorm.query import QueryBuilder
 from masoniteorm.collection import Collection
 from masonite.helpers import config
 
+from app.services.WorkspaceService import WorkspaceService
+
 ITEM_DATA_FIELD__TITLE = 1
 ITEM_TYPE__ATTACHMENT = 2
 CREATOR_TYPES__EDITOR = 10
 
+
 class FullTextSearchController(Controller):
 
-    def index(self, view: View, request: Request):
-        return view.render("full_text_search.index")
+    def index(self, view: View, workspaceService: WorkspaceService):
+        return view.render("full_text_search.index", {'workspace': workspaceService.workspace})
 
-    def api_index(self, request: Request):
+    def api_index(self, request: Request, workspaceService: WorkspaceService):
         search_terms = request.query('query').split(" ")
 
-        collections = QueryBuilder().on('zotero').table('collections') \
-            .where('parentCollectionID', '=', config('application.PRIMARY_COLLECTION_ID'))\
-            .where_not_in('collectionId', config('application.COLLECTIONS_TO_IGNORE'))\
-            .select('collectionID') \
-            .get()
-        collection_ids = [list(x.values())[0] for x in collections]
+        collection_ids = workspaceService.get_collection_ids()
 
         items = QueryBuilder().on('zotero').table('fulltextWords')\
             .where_in('word', search_terms)\

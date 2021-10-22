@@ -4,47 +4,23 @@ from masonite.controllers import Controller
 from masoniteorm.query import QueryBuilder
 from masonite.helpers import config
 
+from app.Workspace import Workspace
 from app.Tag import Tag
 from app.Note import Note
 from app.Screenshot import Screenshot
+from app.services.WorkspaceService import WorkspaceService
 
-ITEM_DATA_FIELD__TITLE = 1
-ITEM_TYPE__ATTACHMENT = 2
-CREATOR_TYPES__EDITOR = 10
 
 class PapersController(Controller):
+    def index(self, view: View, workspaceService: WorkspaceService):
+        return view.render("papers.index", {'workspace': workspaceService.workspace})
 
-    def index(self, view: View, request: Request):
-        return view.render("papers.index")
-
-    def show(self, view: View, request: Request):
+    def show(self, view: View, request: Request, workspaceService: WorkspaceService):
         item = QueryBuilder().on('zotero').table("items").where('key', '=', request.param('key')).first()
-        return view.render("papers.show", {'item': item})
+        return view.render("papers.show", {'item': item, 'workspace': workspaceService.workspace})
 
-    def api_index(self, request: Request):
-        collections = QueryBuilder().on('zotero').table('collections') \
-            .where('parentCollectionID', '=', config('application.PRIMARY_COLLECTION_ID'))\
-            .where_not_in('collectionId', config('application.COLLECTIONS_TO_IGNORE'))\
-            .select('collectionID') \
-            .get()
-        collection_ids = [list(x.values())[0] for x in collections]
-
-        items = QueryBuilder().on('zotero').table("items") \
-            .right_join('deletedItems', 'items.itemID', '=', 'deletedItems.itemID', ) \
-            .where_null('deletedItems.dateDeleted') \
-            .join('itemData', 'items.itemID', '=', 'itemData.itemID') \
-            .join('itemDataValues', 'itemData.valueID', '=', 'itemDataValues.valueID') \
-            .join('collectionItems', 'items.itemID', '=', 'collectionItems.itemID')\
-            .join('collections', 'collections.collectionID', '=', 'collectionItems.collectionID') \
-            .join('itemAttachments', 'itemAttachments.parentItemId', '=', 'items.itemID')\
-            .where('itemAttachments.contentType', '=', 'application/pdf')\
-            .where_in('collectionItems.collectionID', collection_ids)\
-            .where('itemData.fieldID', '=', ITEM_DATA_FIELD__TITLE) \
-            .where('itemTypeID', '!=', ITEM_TYPE__ATTACHMENT)\
-            .group_by('items.itemID, collectionItems.collectionID')\
-            .select_raw('items.itemID, items.key, itemDataValues.value as title, collections.collectionName, COUNT(itemAttachments.path) as num_attachments') \
-            .order_by('title', 'asc') \
-            .get()
+    def api_index(self, request: Request, workspaceService: WorkspaceService):
+        items = workspaceService.get_papers()
 
         tags = QueryBuilder().on('sqlite').table('tags').group_by('paper_key')
         if request.query('tag_group', False):
@@ -73,45 +49,5 @@ class PapersController(Controller):
 
         return items
 
-    def api_show(self, request: Request):
-        item = QueryBuilder().on('zotero').table("items").where('key', '=', request.param('key')) \
-            .join('collectionItems', 'items.itemID', '=', 'collectionItems.itemID') \
-            .join('collections', 'collections.collectionID', '=', 'collectionItems.collectionID') \
-            .first()
-
-        item['collections'] = QueryBuilder().on('zotero').table('collections')\
-            .join('collectionItems', 'collections.collectionID', '=', 'collectionItems.collectionID')\
-            .where('collectionItems.itemID', '=', item['itemID'])\
-            .where('parentCollectionID', '=', config('application.PRIMARY_COLLECTION_ID'))\
-            .all()
-
-        item['attachments'] = QueryBuilder().on('zotero') \
-            .table("itemAttachments").where('parentItemID', '=', item['itemID']) \
-            .where('contentType', '=', 'application/pdf') \
-            .join('items', 'itemAttachments.itemID', '=', 'items.itemID') \
-            .select('itemAttachments.path, items.key') \
-            .all()
-
-        item['metadata'] = QueryBuilder().on('zotero') \
-            .table("itemData").where('itemID', '=', item['itemID']) \
-            .join('fields', 'itemData.fieldID', '=', 'fields.fieldID') \
-            .join('itemDataValues', 'itemData.valueID', '=', 'itemDataValues.valueID') \
-            .get()
-
-        item['authors'] = QueryBuilder().on('zotero') \
-            .table("creators") \
-            .join('itemCreators', 'creators.creatorID', '=', 'itemCreators.creatorID') \
-            .where_not_in('itemCreators.creatorTypeID', [CREATOR_TYPES__EDITOR])\
-            .where('itemCreators.itemID', '=', item['itemID'])\
-            .order_by('orderIndex')\
-            .get()
-
-        item['title'] = [x['value'] for x in item['metadata'] if x['fieldName'] == 'title'][0]
-
-        item['screenshots'] = Screenshot.where('paper_key', '=', request.param('key')).with_('user').get().serialize()
-
-        item['tags'] = Tag.where('paper_key', '=', request.param('key')).with_('user').get().serialize()
-
-        item['notes'] = Note.where('paper_key', '=', request.param('key')).with_('user').get().serialize()
-
-        return item
+    def api_show(self, request: Request, workspaceServices: WorkspaceService):
+        return workspaceServices.get_paper(request.param('key'))

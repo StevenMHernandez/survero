@@ -126,6 +126,7 @@ Survero - Paper Survey Application
 {% block script %}
 <script>
     var app = null;
+    workspace = {{ workspace|tojson }}
     window.onload = () => {
         app = new Vue({
             el: '#app',
@@ -159,7 +160,10 @@ Survero - Paper Survey Application
                     var params = (new URL(document.location)).searchParams;
                     var tag_group = params.get("tag_group");
                     this.filter_by_tag_group = tag_group;
-                    var path = tag_group ? '/api/papers?tag_group=' + tag_group : '/api/papers';
+                    var path = '/api/workspaces/' + workspace.key + '/papers';
+                    if (tag_group) {
+                        path += "?tag_group=" + tag_group;
+                    }
                     axios.get(path)
                         .then(response => {
                             this.isBusy = false;
@@ -194,9 +198,11 @@ Survero - Paper Survey Application
                     return this.collections.filter(c => this.collectionClass(c) === 'text-danger').length;
                 },
                 paperUrl(key) {
-                    return this.filter_by_tag_group ?
-                        '/papers/' + key + "?tag_group=" + this.filter_by_tag_group
-                        : '/papers/' + key
+                    path = '/workspaces/' + workspace.key + '/papers/' + key
+                    if (this.filter_by_tag_group) {
+                        path += "?tag_group=" + this.filter_by_tag_group
+                    }
+                    return path;
                 },
                 filterTable(row, filter) {
                     return !this.show_only_needs_review || row.needs_review
