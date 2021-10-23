@@ -54,3 +54,11 @@ open http://localhost:12000
 ```
 
 Survero stores all new data such as tags, screenshots-metadata in a new `.sqlite` file located at `./volumes/survero/survero.sqlite`.
+
+## Updating Survero
+
+When updating you may need to rerun migrations:
+
+```
+docker-compose exec survero craft migrate   
+```
