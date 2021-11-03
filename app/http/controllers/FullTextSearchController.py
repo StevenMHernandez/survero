@@ -7,10 +7,6 @@ from masonite.helpers import config
 
 from app.services.WorkspaceService import WorkspaceService
 
-ITEM_DATA_FIELD__TITLE = 1
-ITEM_TYPE__ATTACHMENT = 2
-CREATOR_TYPES__EDITOR = 10
-
 
 class FullTextSearchController(Controller):
 
@@ -41,8 +37,8 @@ class FullTextSearchController(Controller):
             .join('itemAttachments', 'itemAttachments.parentItemId', '=', 'items.itemID')\
             .where('itemAttachments.contentType', '=', 'application/pdf')\
             .where_in('collectionItems.collectionID', collection_ids)\
-            .where('itemData.fieldID', '=', ITEM_DATA_FIELD__TITLE) \
-            .where('itemTypeID', '!=', ITEM_TYPE__ATTACHMENT)\
+            .where('itemData.fieldID', '=', workspaceService.ITEM_DATA_FIELD__TITLE) \
+            .where('itemTypeID', '!=', workspaceService.ITEM_TYPE__ATTACHMENT)\
             .group_by('items.itemID')\
             .select_raw('items.itemID, items.key, itemDataValues.value as title, collections.collectionName, COUNT(itemAttachments.path) as num_attachments') \
             .order_by('title', 'asc') \

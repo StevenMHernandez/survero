@@ -7,12 +7,14 @@ from app.Note import Note
 from app.Tag import Tag
 from app.Screenshot import Screenshot
 
-ITEM_DATA_FIELD__TITLE = 1
-ITEM_TYPE__ATTACHMENT = 2
-CREATOR_TYPES__EDITOR = 10
 
 
 class WorkspaceService:
+    ITEM_DATA_FIELD__TITLE = 1
+    ITEM_TYPE__ATTACHMENT = 2
+    CREATOR_TYPES__EDITOR = 10
+    ITEM_DATA_FIELD__PUBLICATION_TITLE = 37
+
     def __init__(self, request: Request):
         self.request = request
         self.workspace = QueryBuilder().on('zotero').table('collections').where('key', request.param('workpace_key')).get()[0]
@@ -53,8 +55,8 @@ class WorkspaceService:
             .join('itemAttachments', 'itemAttachments.parentItemId', '=', 'items.itemID') \
             .where('itemAttachments.contentType', '=', 'application/pdf') \
             .where_in('collectionItems.collectionID', collection_ids) \
-            .where('itemData.fieldID', '=', ITEM_DATA_FIELD__TITLE) \
-            .where('itemTypeID', '!=', ITEM_TYPE__ATTACHMENT) \
+            .where('itemData.fieldID', '=', self.ITEM_DATA_FIELD__TITLE) \
+            .where('itemTypeID', '!=', self.ITEM_TYPE__ATTACHMENT) \
             .group_by('items.itemID, collectionItems.collectionID') \
             .select_raw(
             'items.itemID, items.key, itemDataValues.value as title, collections.collectionName, COUNT(itemAttachments.path) as num_attachments') \
@@ -90,7 +92,7 @@ class WorkspaceService:
         item['authors'] = QueryBuilder().on('zotero') \
             .table("creators") \
             .join('itemCreators', 'creators.creatorID', '=', 'itemCreators.creatorID') \
-            .where_not_in('itemCreators.creatorTypeID', [CREATOR_TYPES__EDITOR])\
+            .where_not_in('itemCreators.creatorTypeID', [self.CREATOR_TYPES__EDITOR])\
             .where('itemCreators.itemID', '=', item['itemID'])\
             .order_by('orderIndex')\
             .get()

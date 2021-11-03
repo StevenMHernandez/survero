@@ -6,10 +6,6 @@ from masonite.helpers import config
 
 from app.Workspace import Workspace
 
-ITEM_DATA_FIELD__TITLE = 1
-ITEM_TYPE__ATTACHMENT = 2
-CREATOR_TYPES__EDITOR = 10
-
 
 class WorkspacesController(Controller):
 

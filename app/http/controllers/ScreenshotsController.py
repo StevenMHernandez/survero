@@ -40,7 +40,7 @@ class ScreenshotsController(Controller):
             .where_in('items.key', [s['paper_key'] for s in screenshots]) \
             .join('itemData', 'items.itemID', '=', 'itemData.itemID') \
             .join('itemDataValues', 'itemData.valueID', '=', 'itemDataValues.valueID') \
-            .where('itemData.fieldID', '=', ITEM_DATA_FIELD__TITLE) \
+            .where('itemData.fieldID', '=', workspaceService.ITEM_DATA_FIELD__TITLE) \
             .group_by('items.itemID') \
             .select_raw('items.key, itemDataValues.value as title') \
             .order_by('title', 'asc') \

@@ -6,11 +6,6 @@ from masonite.helpers import config
 
 from app.services.WorkspaceService import WorkspaceService
 
-ITEM_DATA_FIELD__TITLE = 1
-ITEM_TYPE__ATTACHMENT = 2
-CREATOR_TYPES__EDITOR = 10
-ITEM_DATA_FIELD__PUBLICATION_TITLE = 37
-
 
 class PublicationsController(Controller):
     def index(self, view: View, workspaceService: WorkspaceService):
@@ -25,7 +20,7 @@ class PublicationsController(Controller):
             .join('collectionItems', 'items.itemID', '=', 'collectionItems.itemID') \
             .join('collections', 'collections.collectionID', '=', 'collectionItems.collectionID') \
             .where_in('collectionItems.collectionID', collection_ids)\
-            .where('itemData.fieldID', '=', ITEM_DATA_FIELD__PUBLICATION_TITLE) \
+            .where('itemData.fieldID', '=', workspaceService.ITEM_DATA_FIELD__PUBLICATION_TITLE) \
             .group_by('value') \
             .select_raw('value as publicationTitle, COUNT(value) as count') \
             .get()
@@ -42,7 +37,7 @@ class PublicationsController(Controller):
         JOIN itemDataValues AS IDV2 on (ID2.valueID = IDV2.valueId and ID2.fieldID = ?)
         WHERE deletedItems.dateDeleted IS NULL
         ORDER BY IDV1.value;
-        """, [ITEM_DATA_FIELD__PUBLICATION_TITLE, ITEM_DATA_FIELD__TITLE])
+        """, [workspaceService.ITEM_DATA_FIELD__PUBLICATION_TITLE, workspaceService.ITEM_DATA_FIELD__TITLE])
 
         papers = [p for p in papers if p['collectionID'] in collection_ids]
 

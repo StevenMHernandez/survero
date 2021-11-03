@@ -6,10 +6,6 @@ from masonite.helpers import config
 
 from app.services.WorkspaceService import WorkspaceService
 
-ITEM_DATA_FIELD__TITLE = 1
-ITEM_TYPE__ATTACHMENT = 2
-CREATOR_TYPES__EDITOR = 10
-
 
 class AuthorsController(Controller):
 
@@ -32,7 +28,7 @@ class AuthorsController(Controller):
             .join('itemCreators', 'creators.creatorID', '=', 'itemCreators.creatorID')\
             .join('items', 'items.itemID', '=', 'itemCreators.itemID')\
             .where('items.libraryID', '=', 1)\
-            .where_not_in('itemCreators.creatorTypeID', [CREATOR_TYPES__EDITOR])\
+            .where_not_in('itemCreators.creatorTypeID', [workspaceService.CREATOR_TYPES__EDITOR])\
             .right_join('deletedItems', 'items.itemID', '=', 'deletedItems.itemID', ) \
             .where_null('deletedItems.dateDeleted') \
             .join('itemData', 'items.itemID', '=', 'itemData.itemID') \
@@ -40,8 +36,8 @@ class AuthorsController(Controller):
             .join('collectionItems', 'items.itemID', '=', 'collectionItems.itemID')\
             .join('collections', 'collections.collectionID', '=', 'collectionItems.collectionID') \
             .where_in('collectionItems.collectionID', collection_ids)\
-            .where('itemData.fieldID', '=', ITEM_DATA_FIELD__TITLE) \
-            .where('items.itemTypeID', '!=', ITEM_TYPE__ATTACHMENT)\
+            .where('itemData.fieldID', '=', workspaceService.ITEM_DATA_FIELD__TITLE) \
+            .where('items.itemTypeID', '!=', workspaceService.ITEM_TYPE__ATTACHMENT)\
             .group_by('creators.creatorID')\
             .select_raw('creators.creatorID, creators.firstName, creators.lastName, COUNT(DISTINCT items.key) as num_papers')\
             .order_by('title', 'asc')\
@@ -56,7 +52,7 @@ class AuthorsController(Controller):
             .join('itemCreators', 'creators.creatorID', '=', 'itemCreators.creatorID')\
             .join('items', 'items.itemID', '=', 'itemCreators.itemID')\
             .where('items.libraryID', '=', 1)\
-            .where_not_in('itemCreators.creatorTypeID', [CREATOR_TYPES__EDITOR])\
+            .where_not_in('itemCreators.creatorTypeID', [workspaceService.CREATOR_TYPES__EDITOR])\
             .right_join('deletedItems', 'items.itemID', '=', 'deletedItems.itemID', ) \
             .where_null('deletedItems.dateDeleted') \
             .join('itemData', 'items.itemID', '=', 'itemData.itemID') \
@@ -64,8 +60,8 @@ class AuthorsController(Controller):
             .join('collectionItems', 'items.itemID', '=', 'collectionItems.itemID')\
             .join('collections', 'collections.collectionID', '=', 'collectionItems.collectionID') \
             .where_in('collectionItems.collectionID', collection_ids)\
-            .where('itemData.fieldID', '=', ITEM_DATA_FIELD__TITLE) \
-            .where('items.itemTypeID', '!=', ITEM_TYPE__ATTACHMENT)\
+            .where('itemData.fieldID', '=', workspaceService.ITEM_DATA_FIELD__TITLE) \
+            .where('items.itemTypeID', '!=', workspaceService.ITEM_TYPE__ATTACHMENT)\
             .group_by('creators.creatorID')\
             .select_raw('creators.creatorID, creators.firstName, creators.lastName, COUNT(DISTINCT items.key) as num_papers, GROUP_CONCAT(DISTINCT items.key) as paper_keys')\
             .order_by('title', 'asc')\
@@ -109,7 +105,7 @@ class AuthorsController(Controller):
             .right_join('deletedItems', 'items.itemID', '=', 'deletedItems.itemID', ) \
             .where_null('deletedItems.dateDeleted') \
             .where('items.libraryID', '=', 1)\
-            .where_not_in('itemCreators.creatorTypeID', [CREATOR_TYPES__EDITOR])\
+            .where_not_in('itemCreators.creatorTypeID', [workspaceService.CREATOR_TYPES__EDITOR])\
             .join('itemData', 'items.itemID', '=', 'itemData.itemID') \
             .join('itemDataValues', 'itemData.valueID', '=', 'itemDataValues.valueID') \
             .join('collectionItems', 'items.itemID', '=', 'collectionItems.itemID')\
@@ -117,8 +113,8 @@ class AuthorsController(Controller):
             .join('itemCreators', 'items.itemID', '=', 'itemCreators.itemID') \
             .where_in('items.key', workspaceService.get_paper_keys()) \
             .where('itemCreators.creatorID', '=', author['creatorID'])\
-            .where('itemData.fieldID', '=', ITEM_DATA_FIELD__TITLE) \
-            .where('itemTypeID', '!=', ITEM_TYPE__ATTACHMENT)\
+            .where('itemData.fieldID', '=', workspaceService.ITEM_DATA_FIELD__TITLE) \
+            .where('itemTypeID', '!=', workspaceService.ITEM_TYPE__ATTACHMENT)\
             .group_by('items.itemID, collectionItems.collectionID')\
             .select_raw('items.itemID, items.key, itemDataValues.value as title, collections.collectionName') \
             .order_by('title', 'asc') \
