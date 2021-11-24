@@ -39,7 +39,7 @@ class TagsController(Controller):
             .join('itemData', 'items.itemID', '=', 'itemData.itemID') \
             .join('itemDataValues', 'itemData.valueID', '=', 'itemDataValues.valueID') \
             .where_in('items.key', paper_ids) \
-            .where('itemData.fieldID', '=', ITEM_DATA_FIELD__TITLE) \
+            .where('itemData.fieldID', '=', workspaceService.ITEM_DATA_FIELD__TITLE) \
             .group_by('items.itemID') \
             .select_raw('items.itemID, items.key, itemDataValues.value as title') \
             .order_by('title', 'asc') \
