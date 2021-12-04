@@ -4,28 +4,15 @@ from masonite.controllers import Controller
 from masoniteorm.query import QueryBuilder
 from masonite.helpers import config
 
-ITEM_DATA_FIELD__TITLE = 1
-ITEM_TYPE__ATTACHMENT = 2
-CREATOR_TYPES__EDITOR = 10
-ITEM_DATA_FIELD__PUBLICATION_TITLE = 37
+from app.services.WorkspaceService import WorkspaceService
 
 
 class PublicationsController(Controller):
+    def index(self, view: View, workspaceService: WorkspaceService):
+        return view.render("publications.index", {'workspace': workspaceService.workspace})
 
-    def index(self, view: View):
-        return view.render("publications.index")
-
-    def graph(self, view: View):
-        return view.render("publications.graph")
-
-    def api_index(self):
-
-        collections = QueryBuilder().on('zotero').table('collections') \
-            .where('parentCollectionID', '=', config('application.PRIMARY_COLLECTION_ID'))\
-            .where_not_in('collectionId', config('application.COLLECTIONS_TO_IGNORE'))\
-            .select('collectionID') \
-            .get()
-        collection_ids = [list(x.values())[0] for x in collections]
+    def api_index(self, workspaceService: WorkspaceService):
+        collection_ids = workspaceService.get_collection_ids()
 
         publications = QueryBuilder().on('zotero').table('itemDataValues') \
             .join('itemData', 'itemDataValues.valueID', '=', 'itemData.valueID') \
@@ -33,7 +20,7 @@ class PublicationsController(Controller):
             .join('collectionItems', 'items.itemID', '=', 'collectionItems.itemID') \
             .join('collections', 'collections.collectionID', '=', 'collectionItems.collectionID') \
             .where_in('collectionItems.collectionID', collection_ids)\
-            .where('itemData.fieldID', '=', ITEM_DATA_FIELD__PUBLICATION_TITLE) \
+            .where('itemData.fieldID', '=', workspaceService.ITEM_DATA_FIELD__PUBLICATION_TITLE) \
             .group_by('value') \
             .select_raw('value as publicationTitle, COUNT(value) as count') \
             .get()
@@ -50,7 +37,7 @@ class PublicationsController(Controller):
         JOIN itemDataValues AS IDV2 on (ID2.valueID = IDV2.valueId and ID2.fieldID = ?)
         WHERE deletedItems.dateDeleted IS NULL
         ORDER BY IDV1.value;
-        """, [ITEM_DATA_FIELD__PUBLICATION_TITLE, ITEM_DATA_FIELD__TITLE])
+        """, [workspaceService.ITEM_DATA_FIELD__PUBLICATION_TITLE, workspaceService.ITEM_DATA_FIELD__TITLE])
 
         papers = [p for p in papers if p['collectionID'] in collection_ids]
 

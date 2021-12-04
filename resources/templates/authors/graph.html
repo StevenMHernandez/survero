@@ -28,12 +28,14 @@ Co-Authorship Graph - Survero - Paper Survey Application
     var width = window.screen.width;
     var height = window.screen.width;
 
+    workspace = {{ workspace|tojson }}
+
     var svg = d3.select("#graph")
         .append("svg")
         .attr("width", width)
         .attr("height", height);
 
-    d3.json("/api/authors/graph", function (data) {
+    d3.json('/api/workspaces/' + workspace.key + '/authors/graph', function (data) {
         var simulation = d3.forceSimulation(data.nodes)
             .force("link", d3.forceLink(data.links).id(d => d.id))
             .force("charge", d3.forceManyBody())

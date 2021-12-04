@@ -5,24 +5,18 @@ from masoniteorm.query import QueryBuilder
 from masoniteorm.collection import Collection
 from masonite.helpers import config
 
-ITEM_DATA_FIELD__TITLE = 1
-ITEM_TYPE__ATTACHMENT = 2
-CREATOR_TYPES__EDITOR = 10
+from app.services.WorkspaceService import WorkspaceService
+
 
 class FullTextSearchController(Controller):
 
-    def index(self, view: View, request: Request):
-        return view.render("full_text_search.index")
+    def index(self, view: View, workspaceService: WorkspaceService):
+        return view.render("full_text_search.index", {'workspace': workspaceService.workspace})
 
-    def api_index(self, request: Request):
+    def api_index(self, request: Request, workspaceService: WorkspaceService):
         search_terms = request.query('query').split(" ")
 
-        collections = QueryBuilder().on('zotero').table('collections') \
-            .where('parentCollectionID', '=', config('application.PRIMARY_COLLECTION_ID'))\
-            .where_not_in('collectionId', config('application.COLLECTIONS_TO_IGNORE'))\
-            .select('collectionID') \
-            .get()
-        collection_ids = [list(x.values())[0] for x in collections]
+        collection_ids = workspaceService.get_collection_ids()
 
         items = QueryBuilder().on('zotero').table('fulltextWords')\
             .where_in('word', search_terms)\
@@ -43,8 +37,8 @@ class FullTextSearchController(Controller):
             .join('itemAttachments', 'itemAttachments.parentItemId', '=', 'items.itemID')\
             .where('itemAttachments.contentType', '=', 'application/pdf')\
             .where_in('collectionItems.collectionID', collection_ids)\
-            .where('itemData.fieldID', '=', ITEM_DATA_FIELD__TITLE) \
-            .where('itemTypeID', '!=', ITEM_TYPE__ATTACHMENT)\
+            .where('itemData.fieldID', '=', workspaceService.ITEM_DATA_FIELD__TITLE) \
+            .where('itemTypeID', '!=', workspaceService.ITEM_TYPE__ATTACHMENT)\
             .group_by('items.itemID')\
             .select_raw('items.itemID, items.key, itemDataValues.value as title, collections.collectionName, COUNT(itemAttachments.path) as num_attachments') \
             .order_by('title', 'asc') \

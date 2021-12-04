@@ -64,7 +64,7 @@ Survero - Paper Survey Application
 
         <div v-if="items.filter(it => it.is_visible).length > 0">
             Open all {{ items.filter(it => it.is_visible).length }} links from your Terminal.
-            <textarea class="form-control" style="height: 100px" v-if="items.length > 0">{{ items.filter(it => it.is_visible).map(it => "open " + APP_URL + "/papers/" + it.key + "\n").reduce((x,y) => x + y, '').trim() }}</textarea>
+            <textarea class="form-control" style="height: 100px" v-if="items.length > 0">{{ items.filter(it => it.is_visible).map(it => "open " + APP_URL + "/workspaces/" + workspace.key + "/papers/" + it.key + "\n").reduce((x,y) => x + y, '').trim() }}</textarea>
         </div>
 
 
@@ -74,7 +74,7 @@ Survero - Paper Survey Application
 
         <ol>
             <li v-for="it in items" v-if="it.is_visible">
-                <a v-bind:href="'/papers/' + it.key">
+                <a v-bind:href="'/workspaces/' + workspace.key + '/papers/' + it.key">
                     {{ it.title}}
                 </a>
             </li>
@@ -87,6 +87,7 @@ Survero - Paper Survey Application
 {% block script %}
 <script>
     var app = null;
+    workspace = {{ workspace|tojson }}
     window.onload = () => {
         Vue.component('plotly', Plotly);
 
@@ -95,6 +96,7 @@ Survero - Paper Survey Application
             data() {
                 return {
                     APP_URL: APP_URL,
+                    workspace: workspace,
                     items: [],
                     tag_groups_to_hide: {},
                     alternatives: [],
@@ -103,7 +105,7 @@ Survero - Paper Survey Application
             },
             methods: {
                 reload() {
-                    axios.get('/api/search?query=' + this.query)
+                    axios.get('/api/workspaces/' + workspace.key + '/search?query=' + this.query)
                         .then(response => {
                             this.items = response.data.map(it => {
                                 it['is_visible'] = true;
@@ -120,7 +122,7 @@ Survero - Paper Survey Application
 
                             this.toggleItemVisibility();
                         });
-                    axios.get('/api/search/alternatives?query=' + this.query)
+                    axios.get('/api/workspaces/' + workspace.key + '/search/alternatives?query=' + this.query)
                         .then(response => {
                             this.alternatives = response.data;
                         });
@@ -139,11 +141,6 @@ Survero - Paper Survey Application
                     return should
                 },
                 toggleItemVisibility() {
-                    // this.items = this.items.map(it => {
-                    //     it['is_visible'] = this.itemShouldBeVisible(it)
-                    //     return it
-                    // })
-
                     for (var i = 0; i < this.items.length; i++) {
                         this.items[i]['is_visible'] = this.itemShouldBeVisible(this.items[i])
                     }

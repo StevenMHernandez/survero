@@ -24,7 +24,7 @@ class LoginController:
             masonite.view.View -- Returns the Masonite view class.
         """
         if request.user():
-            return request.redirect("/papers")
+            return request.redirect("/workspaces")
 
         return view.render("auth/login")
 
@@ -48,7 +48,7 @@ class LoginController:
             return request.back().with_errors(errors).with_input()
 
         if auth.login(request.input("email"), request.input("password")):
-            return request.redirect("/papers")
+            return request.redirect("/workspaces")
 
         return request.back().with_errors({"email": ["Email or password is incorrect"]})
 

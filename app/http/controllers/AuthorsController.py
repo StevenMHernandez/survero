@@ -4,38 +4,31 @@ from masonite.controllers import Controller
 from masoniteorm.query import QueryBuilder
 from masonite.helpers import config
 
-ITEM_DATA_FIELD__TITLE = 1
-ITEM_TYPE__ATTACHMENT = 2
-CREATOR_TYPES__EDITOR = 10
+from app.services.WorkspaceService import WorkspaceService
 
 
 class AuthorsController(Controller):
 
-    def index(self, view: View):
-        return view.render("authors.index")
+    def index(self, view: View, workspaceService: WorkspaceService):
+        return view.render("authors.index", {'workspace': workspaceService.workspace})
 
-    def graph(self, view: View):
-        return view.render("authors.graph")
+    def graph(self, view: View, request: Request, workspaceService: WorkspaceService):
+        return view.render("authors.graph", {'workspace': workspaceService.workspace})
 
-    def show(self, view: View, request: Request):
+    def show(self, view: View, request: Request, workspaceService: WorkspaceService):
         author = QueryBuilder().on('zotero').table("creators")\
             .where('creatorID', '=', request.param('creator_id'))\
             .first()
-        return view.render("authors.show", {'author': author})
+        return view.render("authors.show", {'author': author, 'workspace': workspaceService.workspace})
 
-    def api_index(self):
-        collections = QueryBuilder().on('zotero').table('collections') \
-            .where('parentCollectionID', '=', config('application.PRIMARY_COLLECTION_ID'))\
-            .where_not_in('collectionId', config('application.COLLECTIONS_TO_IGNORE'))\
-            .select('collectionID') \
-            .get()
-        collection_ids = [list(x.values())[0] for x in collections]
+    def api_index(self, workspaceService: WorkspaceService):
+        collection_ids = workspaceService.get_collection_ids()
 
         authors = QueryBuilder().on('zotero').table("creators")\
             .join('itemCreators', 'creators.creatorID', '=', 'itemCreators.creatorID')\
             .join('items', 'items.itemID', '=', 'itemCreators.itemID')\
             .where('items.libraryID', '=', 1)\
-            .where_not_in('itemCreators.creatorTypeID', [CREATOR_TYPES__EDITOR])\
+            .where_not_in('itemCreators.creatorTypeID', [workspaceService.CREATOR_TYPES__EDITOR])\
             .right_join('deletedItems', 'items.itemID', '=', 'deletedItems.itemID', ) \
             .where_null('deletedItems.dateDeleted') \
             .join('itemData', 'items.itemID', '=', 'itemData.itemID') \
@@ -43,8 +36,8 @@ class AuthorsController(Controller):
             .join('collectionItems', 'items.itemID', '=', 'collectionItems.itemID')\
             .join('collections', 'collections.collectionID', '=', 'collectionItems.collectionID') \
             .where_in('collectionItems.collectionID', collection_ids)\
-            .where('itemData.fieldID', '=', ITEM_DATA_FIELD__TITLE) \
-            .where('items.itemTypeID', '!=', ITEM_TYPE__ATTACHMENT)\
+            .where('itemData.fieldID', '=', workspaceService.ITEM_DATA_FIELD__TITLE) \
+            .where('items.itemTypeID', '!=', workspaceService.ITEM_TYPE__ATTACHMENT)\
             .group_by('creators.creatorID')\
             .select_raw('creators.creatorID, creators.firstName, creators.lastName, COUNT(DISTINCT items.key) as num_papers')\
             .order_by('title', 'asc')\
@@ -52,19 +45,14 @@ class AuthorsController(Controller):
 
         return authors
 
-    def api_graph(self):
-        collections = QueryBuilder().on('zotero').table('collections') \
-            .where('parentCollectionID', '=', config('application.PRIMARY_COLLECTION_ID'))\
-            .where_not_in('collectionId', config('application.COLLECTIONS_TO_IGNORE'))\
-            .select('collectionID') \
-            .get()
-        collection_ids = [list(x.values())[0] for x in collections]
+    def api_graph(self, workspaceService: WorkspaceService):
+        collection_ids = workspaceService.get_collection_ids()
 
         authors = QueryBuilder().on('zotero').table("creators")\
             .join('itemCreators', 'creators.creatorID', '=', 'itemCreators.creatorID')\
             .join('items', 'items.itemID', '=', 'itemCreators.itemID')\
             .where('items.libraryID', '=', 1)\
-            .where_not_in('itemCreators.creatorTypeID', [CREATOR_TYPES__EDITOR])\
+            .where_not_in('itemCreators.creatorTypeID', [workspaceService.CREATOR_TYPES__EDITOR])\
             .right_join('deletedItems', 'items.itemID', '=', 'deletedItems.itemID', ) \
             .where_null('deletedItems.dateDeleted') \
             .join('itemData', 'items.itemID', '=', 'itemData.itemID') \
@@ -72,8 +60,8 @@ class AuthorsController(Controller):
             .join('collectionItems', 'items.itemID', '=', 'collectionItems.itemID')\
             .join('collections', 'collections.collectionID', '=', 'collectionItems.collectionID') \
             .where_in('collectionItems.collectionID', collection_ids)\
-            .where('itemData.fieldID', '=', ITEM_DATA_FIELD__TITLE) \
-            .where('items.itemTypeID', '!=', ITEM_TYPE__ATTACHMENT)\
+            .where('itemData.fieldID', '=', workspaceService.ITEM_DATA_FIELD__TITLE) \
+            .where('items.itemTypeID', '!=', workspaceService.ITEM_TYPE__ATTACHMENT)\
             .group_by('creators.creatorID')\
             .select_raw('creators.creatorID, creators.firstName, creators.lastName, COUNT(DISTINCT items.key) as num_papers, GROUP_CONCAT(DISTINCT items.key) as paper_keys')\
             .order_by('title', 'asc')\
@@ -110,22 +98,23 @@ class AuthorsController(Controller):
 
         return {'nodes': nodes, 'links': links}
 
-    def api_show(self, request: Request):
+    def api_show(self, request: Request, workspaceService: WorkspaceService):
         author = QueryBuilder().on('zotero').table("creators").where('creatorId', '=', request.param('creator_id')).first()
 
         papers = QueryBuilder().on('zotero').table("items") \
             .right_join('deletedItems', 'items.itemID', '=', 'deletedItems.itemID', ) \
             .where_null('deletedItems.dateDeleted') \
             .where('items.libraryID', '=', 1)\
-            .where_not_in('itemCreators.creatorTypeID', [CREATOR_TYPES__EDITOR])\
+            .where_not_in('itemCreators.creatorTypeID', [workspaceService.CREATOR_TYPES__EDITOR])\
             .join('itemData', 'items.itemID', '=', 'itemData.itemID') \
             .join('itemDataValues', 'itemData.valueID', '=', 'itemDataValues.valueID') \
             .join('collectionItems', 'items.itemID', '=', 'collectionItems.itemID')\
             .join('collections', 'collections.collectionID', '=', 'collectionItems.collectionID') \
-            .join('itemCreators', 'items.itemID', '=', 'itemCreators.itemID')\
+            .join('itemCreators', 'items.itemID', '=', 'itemCreators.itemID') \
+            .where_in('items.key', workspaceService.get_paper_keys()) \
             .where('itemCreators.creatorID', '=', author['creatorID'])\
-            .where('itemData.fieldID', '=', ITEM_DATA_FIELD__TITLE) \
-            .where('itemTypeID', '!=', ITEM_TYPE__ATTACHMENT)\
+            .where('itemData.fieldID', '=', workspaceService.ITEM_DATA_FIELD__TITLE) \
+            .where('itemTypeID', '!=', workspaceService.ITEM_TYPE__ATTACHMENT)\
             .group_by('items.itemID, collectionItems.collectionID')\
             .select_raw('items.itemID, items.key, itemDataValues.value as title, collections.collectionName') \
             .order_by('title', 'asc') \
@@ -142,6 +131,7 @@ class AuthorsController(Controller):
 
         author['papers'] = papers_organized
 
-        author['screenshots'] =  QueryBuilder().table('screenshots').where_in('paper_key', papers_organized.keys()).get()
+        screenshots = QueryBuilder().table('screenshots').where_in('paper_key', papers_organized.keys()).get()
+        author['screenshots'] = screenshots if screenshots else []
 
         return author

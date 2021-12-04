@@ -21,12 +21,12 @@ Survero - Paper Survey Application
         </div>
         <ol reversed>
             <li v-for="n in notes">
-                <a v-bind:href="'/papers/' + n.paper_key" style="text-decoration: none">
+                <a v-bind:href="'/workspaces/' + workspace.key + '/papers/' + n.paper_key" style="text-decoration: none">
                     [{{ n.paper_key }}]
                 </a>
 
                 <template v-for="v in splitNoteText(n.note)">
-                    <a v-if="v['isPaperKey']" v-bind:href="'/papers/' +  v['value']">{{ v['value'] }}</a>
+                    <a v-if="v['isPaperKey']" v-bind:href="'/workspaces/' + workspace.key + '/papers/' +  v['value']">{{ v['value'] }}</a>
                     <span v-if="!v['isPaperKey']">{{ v['value'] }}</span>
                 </template>
             </li>
@@ -39,17 +39,19 @@ Survero - Paper Survey Application
 {% block script %}
 <script>
     var app = null;
+    workspace = {{ workspace|tojson }};
     window.onload = () => {
         app = new Vue({
             el: '#app',
             data() {
                 return {
+                    workspace: workspace,
                     notes: [],
                 }
             },
             methods: {
                 reload() {
-                    axios.get('/api/notes')
+                    axios.get('/api/workspaces/{{ workspace.key }}/notes')
                         .then(response => {
                             this.notes = response.data;
                         });

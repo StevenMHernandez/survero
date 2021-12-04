@@ -25,7 +25,7 @@ Survero - Paper Survey Application
             </label>
         </div>
         <div v-for="s in screenshots">
-            <a v-bind:href="'/papers/' + s.paper_key">
+            <a v-bind:href="'/workspaces/' + workspace.key + '/papers/' + s.paper_key">
                     <small>{{ s.paper_title }}</small><br>
                     <small>{{s.user.name}} {{ s.created_at.split("T")[0] }}</small><br>
                 <b-img thumbnail fluid v-bind:src="'/uploads/' + s.file_name" style="margin-bottom: 80px; width: 50%;"></b-img>
@@ -39,18 +39,20 @@ Survero - Paper Survey Application
 {% block script %}
 <script>
     var app = null;
+    workspace = {{ workspace|tojson }}
     window.onload = () => {
         app = new Vue({
             el: '#app',
             data() {
                 return {
+                    workspace: workspace,
                     sort_randomly: true,
                     screenshots: [],
                 }
             },
             methods: {
                 reload() {
-                    axios.get('/api/screenshots')
+                    axios.get('/api/workspaces/' + workspace.key + '/screenshots')
                         .then(response => {
                             this.screenshots = response.data;
                             this.sort_screenshots();

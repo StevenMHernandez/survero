@@ -36,19 +36,27 @@
 <div class="container" id="nav" v-cloak>
     <div class="row">
         <div class="title m-b-md">
-            {{ config('application.name') }}
+            <a href="/workspaces" class="text-muted" style="text-decoration: none;">
+                {{ config('application.name') }}
+            </a>
         </div>
 
-        <ul class="nav">
-            <li><a href="/papers" v-bind:class="isActive('papers')">Papers</a></li>
-            <li><a href="/tags" v-bind:class="isActive('tags')">Tags</a></li>
-            <li><a href="/screenshots" v-bind:class="isActive('screenshots')">Screenshots</a></li>
-            <li><a href="/notes" v-bind:class="isActive('notes')">Notes</a></li>
-            <li><a href="/authors" v-bind:class="isActive('authors')">Authors</a> (<a href="/authors/graph">Graph</a>)</li>
-            <li><a href="/publications" v-bind:class="isActive('publications')">Publications</a></li>
-            <li><a href="/search" v-bind:class="isActive('search')">Full Text Search</a></li>
-        </ul>
+
+        {% if workspace %}
+            <ul class="nav">
+                <li><a href="/workspaces/{{ workspace.key }}/papers" v-bind:class="isActive('papers')">Papers</a></li>
+                <li><a href="/workspaces/{{ workspace.key }}/tags" v-bind:class="isActive('tags')">Tags</a></li>
+                <li><a href="/workspaces/{{ workspace.key }}/screenshots" v-bind:class="isActive('screenshots')">Screenshots</a></li>
+                <li><a href="/workspaces/{{ workspace.key }}/notes" v-bind:class="isActive('notes')">Notes</a></li>
+                <li><a href="/workspaces/{{ workspace.key }}/authors" v-bind:class="isActive('authors')">Authors</a> (<a href="/workspaces/{{ workspace.key }}/authors/graph">Graph</a>)</li>
+                <li><a href="/workspaces/{{ workspace.key }}/publications" v-bind:class="isActive('publications')">Publications</a></li>
+                <li><a href="/workspaces/{{ workspace.key }}/search" v-bind:class="isActive('search')">Full Text Search</a></li>
+            </ul>
+        {% endif %}
         <small style="margin-right: 10px">
+            {% if workspace %}
+                Workspace: {{ workspace.collectionName }}<br>
+            {% endif %}
             Logged in as: {{ auth().name }}
         </small>
     </div>
@@ -65,7 +73,7 @@
             el: '#nav',
             methods: {
                 isActive(tab) {
-                    return tab === window.location.pathname.split("/")[1] ? 'active': ''
+                    return tab === window.location.pathname.split("/")[3] ? 'active': ''
                 },
             }
         });

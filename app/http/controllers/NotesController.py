@@ -5,12 +5,13 @@ from masoniteorm.collection import Collection
 from masoniteorm.query import QueryBuilder
 
 from app.Note import Note
+from app.Workspace import Workspace
+from app.services.WorkspaceService import WorkspaceService
 
 
 class NotesController(Controller):
-
-    def index(self, view: View, request: Request):
-        return view.render("notes.index")
+    def index(self, view: View, workspaceService: WorkspaceService):
+        return view.render("notes.index", {'workspace': workspaceService.workspace})
 
     def create(self, request: Request):
         note = Note.create({
@@ -24,7 +25,7 @@ class NotesController(Controller):
         Note.where('id', request.param('id')).delete()
         return {"status": "success"}
 
-    def api_index(self):
-        notes = Collection(Note.all())
+    def api_index(self, workspaceService: WorkspaceService):
+        notes = Collection(Note.where_in('paper_key', workspaceService.get_paper_keys()).get())
         notes.reverse()
         return notes.serialize()

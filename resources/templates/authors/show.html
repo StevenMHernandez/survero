@@ -24,7 +24,7 @@
 
             <ol>
                 <li v-for="p in author.papers">
-                    <a v-bind:href="'/papers/' + p.key">
+                    <a v-bind:href="'/workspaces/' + workspace.key + '/papers/' + p.key">
                         {{ p.title }}
                     </a>
                     <br>
@@ -41,7 +41,7 @@
                 <b-container fluid class="p-4 bg-dark">
                     <b-row>
                         <b-col v-if="(row-1) * 4 + i - 1 < screenshots.length" v-for="i in 4" style="max-width: 400px;">
-                            <a v-bind:href="'/papers/' + screenshots[(row-1) * 4 + i - 1].paper_key">
+                            <a v-bind:href="'/workspaces/' + workspace.key + '/papers/' + screenshots[(row-1) * 4 + i - 1].paper_key">
                                 <b-img thumbnail fluid v-bind:src="'/uploads/' + screenshots[(row-1) * 4 + i - 1].file_name" style="margin-bottom: 20px;"></b-img>
                             </a>
                         </b-col>
@@ -58,18 +58,20 @@
 
 {% block script %}
 <script>
+    workspace = {{ workspace|tojson }}
     window.onload = () => {
         new Vue({
             el: '#app',
             data() {
                 return {
+                    workspace: workspace,
                     author: {},
                     screenshots: [],
                 }
             },
             methods: {
                 reload() {
-                    axios.get('/api/authors/{{ author.creatorID }}')
+                    axios.get('/api/workspaces/' + this.workspace.key + '/authors/{{ author.creatorID }}')
                         .then(response => {
                             this.author = response.data;
                             this.screenshots = this.author.screenshots;

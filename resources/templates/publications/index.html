@@ -36,7 +36,7 @@ Survero - Paper Survey Application
 
         <b-modal ref="my-modal" hide-footer v-bind:title="selected_publication.title">
             <b-list-group>
-                <b-list-group-item v-bind:href="'/papers/' + p.key" v-for="p in papers" v-if="p.publication == selected_publication.title">{{ p.title }}</b-list-group-item>
+                <b-list-group-item v-bind:href="'/workspaces/' + workspace.key + '/papers/' + p.key" v-for="p in papers" v-if="p.publication == selected_publication.title">{{ p.title }}</b-list-group-item>
             </b-list-group>
         </b-modal>
     </div>
@@ -47,11 +47,13 @@ Survero - Paper Survey Application
 {% block script %}
 <script>
     var app = null;
+    workspace = {{ workspace|tojson }}
     window.onload = () => {
         app = new Vue({
             el: '#app',
             data() {
                 return {
+                    workspace: workspace,
                     publications: [],
                     papers: [],
                     isBusy: false,
@@ -70,7 +72,7 @@ Survero - Paper Survey Application
             methods: {
                 reload() {
                     this.isBusy = true;
-                    axios.get('/api/publications')
+                    axios.get('/api/workspaces/' + this.workspace.key + '/publications')
                         .then(response => {
                             this.isBusy = false;
                             this.publications = response.data.publications;
