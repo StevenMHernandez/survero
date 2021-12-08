@@ -18,7 +18,7 @@ class TagsController(Controller):
             .where_in('paper_key', workspaceService.get_paper_keys()) \
             .group_by('tags.tag') \
             .select_raw('tags.tag, COUNT(tags.tag) as num_tags,  MIN(tags.id) as tag_id') \
-            .order_by('num_tags', direction="DESC") \
+            .order_by('num_tags desc, tags.tag asc') \
             .get()
 
         return tags
