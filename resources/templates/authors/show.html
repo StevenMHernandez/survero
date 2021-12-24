@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block title %}
-{{ author.title }} - Survero
+{{ author.firstName }} {{ author.lastName }}
 {% endblock %}
 
 {% block content %}
@@ -75,7 +75,6 @@
                         .then(response => {
                             this.author = response.data;
                             this.screenshots = this.author.screenshots;
-                            document.title = this.author.firstName + " " + this.author.lastName;
                         });
                 },
             },

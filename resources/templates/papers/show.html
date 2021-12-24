@@ -20,7 +20,7 @@
 {% endblock %}
 
 {% block title %}
-{{ item.title }} - Survero
+{{ item.key }}
 {% endblock %}
 
 {% block content %}
@@ -164,7 +164,7 @@
                     axios.get('/api/workspaces/' + workspace.key + '/papers/{{ item.key }}')
                         .then(response => {
                             this.item = response.data;
-                            document.title = this.item.title;
+                            document.title = document.title.replace(this.item.key, '"' + this.item.title + '"')
                             this.item.tags = this.item.tags.sort((x,y) => {
                                 return x.tag > y.tag
                             });
