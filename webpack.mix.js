@@ -13,6 +13,7 @@ let mix = require('laravel-mix');
 
 mix.js('storage/static/js/app.js', 'public/js')
     .js('storage/static/js/plotly.js', 'public/js')
+    .js('storage/static/js/lazyload.js', 'public/js')
     .sass('storage/static/sass/style.scss', 'public/css');
 
 // Full API

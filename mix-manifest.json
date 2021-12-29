@@ -1,5 +1,6 @@
 {
     "/public/js/app.js": "/public/js/app.js",
     "/public/css/style.css": "/public/css/style.css",
+    "/public/js/lazyload.js": "/public/js/lazyload.js",
     "/public/js/plotly.js": "/public/js/plotly.js"
 }

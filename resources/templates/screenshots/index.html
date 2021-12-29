@@ -28,7 +28,7 @@ Screenshots
             <a v-bind:href="'/workspaces/' + workspace.key + '/papers/' + s.paper_key">
                     <small>{{ s.paper_title }}</small><br>
                     <small>{{s.user.name}} {{ s.created_at.split("T")[0] }}</small><br>
-                <b-img thumbnail fluid v-bind:src="'/uploads/' + s.file_name" style="margin-bottom: 80px; width: 50%;"></b-img>
+                <b-img thumbnail fluid v-lazy="'/uploads/' + s.file_name" style="margin-bottom: 80px; width: 50%;"></b-img>
             </a>
         </div>
     </div>
@@ -37,6 +37,7 @@ Screenshots
 {% endblock %}
 
 {% block script %}
+<script src="/public/js/lazyload.js"></script>
 <script>
     var app = null;
     workspace = {{ workspace|tojson }}
