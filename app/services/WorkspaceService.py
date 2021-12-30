@@ -5,7 +5,6 @@ from masonite.cache import Cache
 from masonite.request import Request
 from masoniteorm.query import QueryBuilder
 from masoniteorm.collection import Collection
-from masonite.configuration import config
 
 from app.Workspace import Workspace
 from app.Note import Note

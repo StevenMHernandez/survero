@@ -17,6 +17,8 @@ HASHING = {
 
 APP_URL = env("APP_URL", "http://localhost:8000/")
 
+TIME_ZONE = env("TIME_ZONE", "America/New_York")
+
 
 """Zotero Path
 Path to local PDF files from Zotero 
