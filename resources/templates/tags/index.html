@@ -181,7 +181,7 @@ Tags
                     });
                 },
                 filterByTagGroupUrl(tg) {
-                    return '/papers?tag_group=' + encodeURIComponent(tg);
+                    return '/workspaces/' + workspace.key + '/papers?tag_group=' + encodeURIComponent(tg);
                 }
             },
             mounted() {
