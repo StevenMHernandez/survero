@@ -281,7 +281,7 @@
                 getDefaultTagString() {
                     tag_group = new URL(location.href).searchParams.get('tag_group');
                     if (tag_group) {
-                        return tag_group;
+                        return tag_group + ": ";
                     }
 
                     if (this.previouslyAddedTag && this.previouslyAddedTag.indexOf(":") > -1) {
