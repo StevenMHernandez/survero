@@ -83,7 +83,7 @@ Papers
             <ul>
                 <li v-for="c in collections">
                     <span v-bind:class="collectionClass(c)">
-                        <a v-bind:class="collectionClass(c)" v-bind:href="'#' + c.replace(/[^a-z]/gi, '')">{{ c }}</a>
+                        <a v-bind:class="collectionClass(c)" v-bind:href="'#' + c.replace(/[^0-9a-z]/gi, '')">{{ c }}</a>
                         (
                         {{ items_per_collection[c].filter(x => !x.needs_review).length }}
                         /
@@ -93,7 +93,7 @@ Papers
                 </li>
             </ul>
             <div v-for="c in collections">
-                <h3 v-bind:id="c.replace(/[^a-z]/gi, '')">{{ c }} ({{ items_per_collection[c].filter(x => x.num_tags > 0 || x.num_screenshots > 0 || x.num_notes > 0).length }} / {{ items_per_collection[c].length }})</h3>
+                <h3 v-bind:id="c.replace(/[^0-9a-z]/gi, '')">{{ c }} ({{ items_per_collection[c].filter(x => x.num_tags > 0 || x.num_screenshots > 0 || x.num_notes > 0).length }} / {{ items_per_collection[c].length }})</h3>
                 <b-table ref="table"
                          striped hover
                          :fields="fields"
