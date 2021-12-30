@@ -93,7 +93,12 @@ Papers
                 </li>
             </ul>
             <div v-for="c in collections">
-                <h3 v-bind:id="c.replace(/[^0-9a-z]/gi, '')">{{ c }} ({{ items_per_collection[c].filter(x => x.num_tags > 0 || x.num_screenshots > 0 || x.num_notes > 0).length }} / {{ items_per_collection[c].length }})</h3>
+                <h3 style="display: inline-block;" v-bind:id="c.replace(/[^0-9a-z]/gi, '')">{{ c }} ({{ items_per_collection[c].filter(x => x.num_tags > 0 || x.num_screenshots > 0 || x.num_notes > 0).length }} / {{ items_per_collection[c].length }})</h3>
+
+                <b-button v-b-toggle="'collapse-' + c.replace(/[^0-9a-z]/gi, '')" variant="light">Open Papers from Terminal</b-button>
+                <b-collapse v-bind:id="'collapse-' + c.replace(/[^0-9a-z]/gi, '')" class="mt-2">
+                        <textarea style="min-height: 200px; width: 100%;">{{ items_per_collection[c].filter(filterTable).map(p => "open \"" + APP_URL + paperUrl(p.key) + "\"\n").reduce((x,y) => x + y, '').trim() }}</textarea>
+                </b-collapse>
                 <b-table ref="table"
                          striped hover
                          :fields="fields"
@@ -126,12 +131,14 @@ Papers
 {% block script %}
 <script>
     var app = null;
+    APP_URL = {{ config('application.URL')|tojson }};
     workspace = {{ workspace|tojson }}
     window.onload = () => {
         app = new Vue({
             el: '#app',
             data() {
                 return {
+                    APP_URL: APP_URL,
                     filter_by_tag_group: false,
                     group_by_collection: true,
                     items: [],
