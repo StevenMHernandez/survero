@@ -13,9 +13,6 @@ Tags
 {% endblock %}
 
 {% block content %}
-<script>
-    TAG_GROUP_GRAPHS__SORT_NUMERICALLY = {{ config('application.TAG_GROUP_GRAPHS__SORT_NUMERICALLY')|tojson }};
-</script>
 <div class="container">
     {% raw %}
     <div id="app" v-cloak>
@@ -41,7 +38,7 @@ Tags
             <h3 v-if="!tg">[GLOBAL TAG GROUP]</h3>
             n_tags={{ tags_per_group[tg].map(t => t.num_tags).reduce((a, b) => a + b, 0) }}
 
-            <plotly :data="data[tg]" :layout="layout[tg]" :display-mode-bar="false"></plotly>
+            <plotly :data="data[tg]" :layout="layout[tg]"></plotly>
             <ol>
                 <li v-for="t in tags_per_group[tg]">
                     <span v-on:click="showModel(t.tag_id, t.tag)">
@@ -115,12 +112,33 @@ Tags
 
                             this.tag_groups.forEach((tg) => {
                                 this.tags_per_group[tg] = [];
-                                this.data[tg] = [{
-                                    x: [],
-                                    y: [],
-                                    type: "bar"
-                                }];
-                                this.layout[tg] = {title: tg}
+                                this.data[tg] = [
+                                    {
+                                        x: [],
+                                        y: [],
+                                        xaxis: 'x',
+                                        yaxis: 'y',
+                                        type: "bar",
+                                        name: 'Count',
+                                    },
+                                ];
+                                this.layout[tg] = {
+                                    xaxis: {
+                                        title: tg,
+                                    },
+                                    yaxis: {
+                                        title: 'Count',
+                                        showline: true,
+                                        side: 'left',
+                                    },
+                                    yaxis2: {
+                                        title: 'CDF',
+                                        overlaying: 'y',
+                                        side: 'right',
+                                        showgrid:false,
+                                        range: [0, 100],
+                                    },
+                                }
                             });
                             this.tags.forEach((t) => {
                                 pos = t.tag.indexOf(": ");
@@ -134,23 +152,51 @@ Tags
                                 this.data[t.tag_group][0]['y'].push(t.num_tags);
                             });
 
-                            TAG_GROUP_GRAPHS__SORT_NUMERICALLY.forEach((tg) => {
-                                d = {};
-                                this.data[tg][0]['x'].forEach((_, i) => {
-                                    d[this.data[tg][0]['x'][i]] = this.data[tg][0]['y'][i];
-                                });
-                                keys = Object.keys(d);
-                                numeric_keys = keys.map((t) => {
-                                    return parseInt(t);
-                                });
+                            // Calculate CDF
+                            this.tags.forEach((t) => {
+                                // Only sort and calculate CDF IF more than half of the tags are "numeric"
+                                num_numeric = this.data[t.tag_group][0]['x'].filter(x => parseFloat(x)).length
+                                num_required = this.data[t.tag_group][0]['x'].length / 2
+                                if (num_numeric > num_required) {
+                                    combined = [];
 
-                                [...Array(keys.length).keys()].sort((a, b) => {
-                                    return numeric_keys[a] - numeric_keys[b]
-                                }).forEach((n, i) => {
-                                    this.data[tg][0]['x'][i] = keys[n];
-                                    this.data[tg][0]['y'][i] = d[keys[n]];
-                                });
-                            })
+                                    for (let i = 0; i < this.data[t.tag_group][0]['x'].length; i++) {
+                                        combined.push({
+                                            'x': this.data[t.tag_group][0]['x'][i],
+                                            'y': this.data[t.tag_group][0]['y'][i],
+                                            'tag': this.tags_per_group[t.tag_group][i],
+                                        });
+                                    }
+                                    combined = combined.sort((a, b) => {
+                                        return parseFloat(a['x']) > parseFloat(b['x']);
+                                    })
+                                    this.data[t.tag_group][0]['x'] = combined.map(it => it['x'])
+                                    this.data[t.tag_group][0]['y'] = combined.map(it => it['y'])
+                                    this.tags_per_group[t.tag_group] = combined.map(it => it['tag'])
+
+                                    sorted_x = combined.map(it => it['x'])
+                                    sorted_y = combined.map(it => it['y']).reduce(function (l, curr) {
+                                        return l.concat([l[l.length - 1] + curr])
+                                    }, [0]).slice(1)
+                                    total = sorted_y[combined.length - 1]
+                                    sorted_y = sorted_y.map(x => 100 * x / total)
+
+                                    this.data[t.tag_group] = [
+                                        this.data[t.tag_group][0],
+                                        {
+                                            x: sorted_x,
+                                            y: sorted_y,
+                                            type: 'scatter',
+                                            xaxis: 'x',
+                                            yaxis: 'y2',
+                                            xbins: {
+                                                size: 1,
+                                            },
+                                            name: 'CDF',
+                                        },
+                                    ]
+                                }
+                            });
                         });
                 },
                 showModel(tag_id, tag_value) {
