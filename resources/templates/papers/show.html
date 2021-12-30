@@ -308,6 +308,14 @@
             },
             mounted() {
                 this.reload()
+            },
+            created() {
+                self = this;
+                document.addEventListener('visibilitychange', function() {
+                    if (!document.hidden) {
+                        self.reload()
+                    }
+                }, false);
             }
         })
     }
