@@ -1,8 +1,8 @@
-from masonite.view import View
+from masonite.views import View
 from masonite.request import Request
 from masonite.controllers import Controller
 from masoniteorm.query import QueryBuilder
-from masonite.helpers import config
+from masonite.configuration import config
 
 from app.services.WorkspaceService import WorkspaceService
 
@@ -131,7 +131,7 @@ class AuthorsController(Controller):
 
         author['papers'] = papers_organized
 
-        screenshots = QueryBuilder().table('screenshots').where_in('paper_key', papers_organized.keys()).get()
+        screenshots = QueryBuilder().table('screenshots').where_in('paper_key', papers_organized.keys()).get().serialize()
         author['screenshots'] = screenshots if screenshots else []
 
         return author

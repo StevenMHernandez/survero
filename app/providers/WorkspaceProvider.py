@@ -1,19 +1,22 @@
 """A WorkspaceProvider Service Provider."""
 
-from masonite.provider import ServiceProvider
+from masonite.providers import Provider
 from masonite.request import Request
 
 from app.services.WorkspaceService import WorkspaceService
 
 
-class WorkspaceProvider(ServiceProvider):
+class WorkspaceProvider(Provider):
     """Provides Services To The Service Container."""
 
-    wsgi = False
+    # wsgi = False
+
+    def __init__(self, application):
+        self.application = application
 
     def register(self):
         """Register objects into the Service Container."""
-        self.app.bind('app.services.WorkspaceService.WorkspaceService', WorkspaceService)
+        self.application.bind('app.services.WorkspaceService.WorkspaceService', WorkspaceService)
 
     def boot(self, request: Request):
         """Boots services required by the container."""

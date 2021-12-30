@@ -1,8 +1,8 @@
-from masonite.view import View
+from masonite.views import View
 from masonite.request import Request
 from masonite.controllers import Controller
 from masoniteorm.query import QueryBuilder
-from masonite.helpers import config
+from masonite.configuration import config
 
 from app.Workspace import Workspace
 

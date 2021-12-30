@@ -2,16 +2,22 @@
 
 import uuid
 
-from masonite import env, Mail, Session
-from masonite.auth import Auth
-from masonite.helpers import config, password as bcrypt_password
+from masonite.environment import env
+from masonite.mail import Mail
+from masonite.sessions import Session
+from masonite.authentication import Auth
+from masonite.configuration import config
+from masonite.facades import Hash
 from masonite.request import Request
-from masonite.view import View
+from masonite.response import Response
+from masonite.response import Response
+from masonite.views import View
 from masonite.validation import Validator
 from config.auth import AUTH
+from masonite.controllers import Controller
 
 
-class PasswordController:
+class PasswordController(Controller):
     """Password Controller."""
 
     def forget(self, view: View, auth: Auth):
@@ -26,11 +32,11 @@ class PasswordController:
                 {"token": token, "app": config("application"), "Auth": auth},
             )
 
-    def send(self, request: Request, session: Session, mail: Mail, validate: Validator):
+    def send(self, request: Request, session: Session, mail: Mail, validate: Validator, response: Response):
         errors = request.validate(validate.required("email"), validate.email("email"))
 
         if errors:
-            return request.back().with_errors(errors)
+            return response.back().with_errors(errors)
 
         email = request.input("email")
         user = AUTH["guards"]["web"]["model"].where("email", email).first()
@@ -48,9 +54,9 @@ class PasswordController:
             "success",
             "If we found that email in our system then the email has been sent. Please follow the instructions in the email to reset your password.",
         )
-        return request.redirect("/password")
+        return response.redirect("/password")
 
-    def update(self, request: Request, validate: Validator):
+    def update(self, request: Request, validate: Validator, response: Response):
         errors = request.validate(
             validate.required("password"),
             # TODO: only available in masonite latest versions (which are not compatible with Masonite 2.2)
@@ -66,7 +72,7 @@ class PasswordController:
         )
 
         if errors:
-            return request.back().with_errors(errors)
+            return response.back().with_errors(errors)
 
         user = (
             AUTH["guards"]["web"]["model"]
@@ -76,4 +82,4 @@ class PasswordController:
         if user:
             user.password = bcrypt_password(request.input("password"))
             user.save()
-            return request.redirect("/login")
+            return response.redirect("/login")

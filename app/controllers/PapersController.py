@@ -1,8 +1,8 @@
-from masonite.view import View
+from masonite.views import View
 from masonite.request import Request
 from masonite.controllers import Controller
 from masoniteorm.query import QueryBuilder
-from masonite.helpers import config
+from masonite.configuration import config
 
 from app.Workspace import Workspace
 from app.Tag import Tag
@@ -23,8 +23,8 @@ class PapersController(Controller):
         items = workspaceService.get_papers()
 
         tags = QueryBuilder().on('sqlite').table('tags').group_by('paper_key')
-        if request.query('tag_group', False):
-            tags = tags.where_like('tag', request.query('tag_group') + ': %')
+        if request.input('tag_group', False):
+            tags = tags.where_like('tag', request.input('tag_group') + ': %')
         tags = tags.select_raw('paper_key, COUNT(paper_key) as num') #.get()
         tags = tags.get()
         tags = {r['paper_key']: r['num'] for r in tags}
@@ -39,7 +39,7 @@ class PapersController(Controller):
             r['num_tags'] = tags.get(r['key'], 0)
             r['num_screenshots'] = screenshots.get(r['key'], 0)
             r['num_notes'] = notes.get(r['key'], 0)
-            if request.query('tag_group', False):
+            if request.input('tag_group', False):
                 r['needs_review'] = not (r['num_tags'])
             else:
                 r['needs_review'] = not (r['num_tags'] or r['num_screenshots'] or r['num_notes'])

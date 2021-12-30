@@ -1,4 +1,4 @@
-from masonite.view import View
+from masonite.views import View
 from masonite.request import Request
 from masonite.controllers import Controller
 from masoniteorm.collection import Collection
@@ -45,7 +45,7 @@ class TagsController(Controller):
             .order_by('title', 'asc') \
             .get()
 
-        return Collection(items).random(len(items)).serialize()
+        return items.random(len(items))
 
     def create(self, request: Request):
         tag = Tag.create({

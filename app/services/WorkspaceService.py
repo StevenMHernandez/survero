@@ -1,12 +1,16 @@
+import os
+import json
+
+from masonite.cache import Cache
 from masonite.request import Request
 from masoniteorm.query import QueryBuilder
 from masoniteorm.collection import Collection
+from masonite.configuration import config
 
 from app.Workspace import Workspace
 from app.Note import Note
 from app.Tag import Tag
 from app.Screenshot import Screenshot
-
 
 
 class WorkspaceService:
@@ -39,7 +43,7 @@ class WorkspaceService:
             .group_by('items.itemID, collectionItems.collectionID') \
             .select_raw('items.itemID, items.key') \
             .order_by('title', 'asc') \
-            .get()
+            .get().serialize()
         return [it['key'] for it in items]
 
     def get_papers(self):
@@ -61,7 +65,7 @@ class WorkspaceService:
             .select_raw(
             'items.itemID, items.key, itemDataValues.value as title, collections.collectionName, COUNT(itemAttachments.path) as num_attachments') \
             .order_by('title', 'asc') \
-            .get()
+            .get().serialize()
         return items
 
     def get_paper(self, paper_key):
@@ -74,20 +78,20 @@ class WorkspaceService:
             .join('collectionItems', 'collections.collectionID', '=', 'collectionItems.collectionID')\
             .where('collectionItems.itemID', '=', item['itemID'])\
             .where_in('collectionId', self.get_collection_ids())\
-            .all()
+            .all().serialize()
 
         item['attachments'] = QueryBuilder().on('zotero') \
             .table("itemAttachments").where('parentItemID', '=', item['itemID']) \
             .where('contentType', '=', 'application/pdf') \
             .join('items', 'itemAttachments.itemID', '=', 'items.itemID') \
             .select('itemAttachments.path, items.key') \
-            .all()
+            .all().serialize()
 
         item['metadata'] = QueryBuilder().on('zotero') \
             .table("itemData").where('itemID', '=', item['itemID']) \
             .join('fields', 'itemData.fieldID', '=', 'fields.fieldID') \
             .join('itemDataValues', 'itemData.valueID', '=', 'itemDataValues.valueID') \
-            .get()
+            .get().serialize()
 
         item['authors'] = QueryBuilder().on('zotero') \
             .table("creators") \
@@ -95,7 +99,7 @@ class WorkspaceService:
             .where_not_in('itemCreators.creatorTypeID', [self.CREATOR_TYPES__EDITOR])\
             .where('itemCreators.itemID', '=', item['itemID'])\
             .order_by('orderIndex')\
-            .get()
+            .get().serialize()
 
         item['title'] = [x['value'] for x in item['metadata'] if x['fieldName'] == 'title'][0]
 

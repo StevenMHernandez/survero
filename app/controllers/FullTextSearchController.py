@@ -1,9 +1,9 @@
-from masonite.view import View
+from masonite.views import View
 from masonite.request import Request
 from masonite.controllers import Controller
 from masoniteorm.query import QueryBuilder
 from masoniteorm.collection import Collection
-from masonite.helpers import config
+from masonite.configuration import config
 
 from app.services.WorkspaceService import WorkspaceService
 
@@ -14,7 +14,7 @@ class FullTextSearchController(Controller):
         return view.render("full_text_search.index", {'workspace': workspaceService.workspace})
 
     def api_index(self, request: Request, workspaceService: WorkspaceService):
-        search_terms = request.query('query').split(" ")
+        search_terms = request.input('query').split(" ")
 
         collection_ids = workspaceService.get_collection_ids()
 
@@ -58,7 +58,7 @@ class FullTextSearchController(Controller):
         return items
 
     def api_alternatives(self, request: Request):
-        search_terms = request.query('query').split(" ")
+        search_terms = request.input('query').split(" ")
 
         alternatives = None
         for q in search_terms:

@@ -1,10 +1,10 @@
 import os
-from masonite import Upload
-from masonite.view import View
+from masonite.filesystem import Storage
+from masonite.views import View
 from masonite.request import Request
 from masonite.controllers import Controller
 from masoniteorm.query import QueryBuilder
-from masonite.helpers import config
+from masonite.configuration import config
 
 from app.Screenshot import Screenshot
 from app.services.WorkspaceService import WorkspaceService
@@ -14,8 +14,8 @@ class ScreenshotsController(Controller):
     def index(self, view: View, workspaceService: WorkspaceService):
         return view.render("screenshots.index", {'workspace': workspaceService.workspace})
 
-    def create(self, upload: Upload, request: Request):
-        file_name = upload.driver('disk').store(request.input('upload'))
+    def create(self, storage: Storage, request: Request):
+        file_name = storage.driver('disk').store(request.input('upload'))
         screenshot = Screenshot.create({
             'paper_key': request.input('paper_key'),
             'file_name': file_name,

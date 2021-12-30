@@ -5,7 +5,7 @@ services:
     build:
       context: ./
       dockerfile: docker/Dockerfile
-    command: craft serve -p 12000 -b 0.0.0.0 -i 0.1
+    command: python craft serve --host 0.0.0.0 -p 12000
     volumes:
       - ./:/usr/src/app/
       - ./volumes/zotero/:/usr/src/db/zotero

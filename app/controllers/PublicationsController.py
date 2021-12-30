@@ -1,8 +1,8 @@
-from masonite.view import View
+from masonite.views import View
 from masonite.request import Request
 from masonite.controllers import Controller
 from masoniteorm.query import QueryBuilder
-from masonite.helpers import config
+from masonite.configuration import config
 
 from app.services.WorkspaceService import WorkspaceService
 
@@ -23,7 +23,7 @@ class PublicationsController(Controller):
             .where('itemData.fieldID', '=', workspaceService.ITEM_DATA_FIELD__PUBLICATION_TITLE) \
             .group_by('value') \
             .select_raw('value as publicationTitle, COUNT(value) as count') \
-            .get()
+            .get().serialize()
 
         papers = QueryBuilder().on('zotero') \
             .statement("""

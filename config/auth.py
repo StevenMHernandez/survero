@@ -1,6 +1,6 @@
 """Authentication Settings."""
 
-from masonite import env
+from masonite.environment import env
 
 from app.User import User
 
@@ -40,4 +40,11 @@ DRIVERS = {
         """How long the token should live for before being refreshed."""
         "lifetime": "60 minutes",
     },
+}
+
+GUARDS = {
+    "default": "web",
+    "web": {"model": User},
+    "password_reset_table": "password_resets",
+    "password_reset_expiration": 1440,  # in minutes. 24 hours. None if disabled
 }
