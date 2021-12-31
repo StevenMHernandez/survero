@@ -193,7 +193,11 @@
                     });
                 },
                 addTag() {
-                    if (this.new_tag_text !== '' && this.new_tag_text !== this.getDefaultTagString()) {
+                    if (
+                        this.new_tag_text !== ''
+                        && this.new_tag_text !== this.getDefaultTagString()
+                        && this.newlyAddedTags.indexOf(this.new_tag_text) === -1
+                    ) {
                         this.newlyAddedTags.push(this.new_tag_text);
                         axios({
                             method: "post",
@@ -213,6 +217,7 @@
                 },
                 deleteTag(tag) {
                     this.deletedTags.push(tag.tag);
+                    this.newlyAddedTags = this.newlyAddedTags.filter(t => t !== tag.tag);
                     axios({
                         method: "delete",
                         url: '/api/tags/' + tag.id,
