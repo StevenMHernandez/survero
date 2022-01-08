@@ -84,7 +84,7 @@ Workspaces
                             '__token': '{{ csrf_token }}',
                             'collection_key': collection.key,
                         },
-                    });
+                    }).then(_ => app.reload());
                 } else {
                     axios({
                         method: "delete",
@@ -92,7 +92,7 @@ Workspaces
                         data: {
                             '__token': '{{ csrf_token }}',
                         },
-                    });
+                    }).then(_ => app.reload());
                 }
             }
         }
@@ -116,6 +116,7 @@ Workspaces
                     axios.get('/api/workspaces')
                         .then(response => {
                             this.isBusy = false;
+                            this.workspaces = [];
                             this.collections = response.data;
                             this.collections.forEach(c => {
                                 if (!this.child_collections.hasOwnProperty(c.parentCollectionID)) {
