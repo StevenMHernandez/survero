@@ -128,7 +128,7 @@
             </b-col>
         </div>
     </div>
-    <vuefullscreenfiledrop @drop='onDrop'></vuefullscreenfiledrop>
+    <vuefullscreenfiledrop @drop='addScreenshot'></vuefullscreenfiledrop>
 </div>
 {% endraw %}
 
@@ -180,7 +180,7 @@
                         });
 
                 },
-                onDrop(formData, files) {
+                addScreenshot(formData, files) {
                     formData.set('paper_key', '{{ item.key }}');
                     formData.set('__token', '{{ csrf_token }}');
                     axios({
@@ -316,11 +316,20 @@
             },
             created() {
                 self = this;
+
                 document.addEventListener('visibilitychange', function() {
                     if (!document.hidden) {
                         self.reload()
                     }
                 }, false);
+
+                window.addEventListener('paste', e => {
+                    for (let i = 0; i < e.clipboardData.files.length; i++) {
+                        var formData = new FormData();
+                        formData.append('upload', e.clipboardData.files[i], e.clipboardData.files[i].name)
+                        self.addScreenshot(formData, e.clipboardData.files)
+                    }
+                });
             }
         })
     }
