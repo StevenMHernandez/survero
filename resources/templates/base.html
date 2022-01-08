@@ -64,6 +64,11 @@
                 Workspace: {{ workspace.collectionName }}<br>
             {% endif %}
             Logged in as: {{ auth().name }}
+
+            {% raw %}
+            <br>
+            Document DB updated at: {{ server_info.db_updated_at }}
+            {% endraw %}
         </small>
     </div>
 <hr>
@@ -77,10 +82,22 @@
     window.addEventListener("load",function(event) {
         nav = new Vue({
             el: '#nav',
+            data: {
+                server_info: {},
+            },
             methods: {
                 isActive(tab) {
                     return tab === window.location.pathname.split("/")[3] ? 'active': ''
                 },
+                reload() {
+                    axios.get('/api/info')
+                        .then(response => {
+                            this.server_info = response.data
+                        });
+                },
+            },
+            mounted() {
+                this.reload()
             }
         });
     })

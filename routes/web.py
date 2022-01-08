@@ -43,6 +43,8 @@ ROUTES = [
     ], middleware=['auth']),
 
     RouteGroup([
+        Get("/api/info", "ApiController@api_info"),
+
         Get("/api/workspaces", "WorkspacesController@api_index"),
         Post("/api/workspaces", "WorkspacesController@create"),
         Delete("/api/workspaces/@workpace_key", "WorkspacesController@delete"),

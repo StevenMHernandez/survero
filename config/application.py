@@ -63,3 +63,8 @@ AUTOLOAD = [
 Path to local PDF files from Zotero 
 """
 ZOTERO_PATH = env('ZOTERO_PATH')
+
+"""Time Zone
+User specified time zone 
+"""
+TIME_ZONE = env("TIME_ZONE", "America/New_York")
