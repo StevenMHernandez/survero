@@ -120,7 +120,7 @@
                         <br>
                         <small>
                             <span class="text-success">{{ n.user.name }}</span>
-                            : <em>{{ n.created_at }}</em>
+                            : <em>{{ DateTime.fromISO(n.created_at).toLocaleString(DateTime.DATETIME_FULL) }}</em>
                             <em class="text-danger deletable" v-on:click="deleteNote(n)">Delete</em>
                         </small>
                     </li>
@@ -147,6 +147,7 @@
             el: '#app',
             data() {
                 return {
+                    DateTime: window.DateTime,
                     workspace: workspace,
                     isBusy: false,
                     item: {},

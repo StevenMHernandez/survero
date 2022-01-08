@@ -67,7 +67,7 @@
 
             {% raw %}
             <br>
-            Document DB updated at: {{ server_info.db_updated_at }}
+            Document DB updated at: {{ DateTime.fromISO(server_info.db_updated_at).toLocaleString(DateTime.DATETIME_FULL) }}
             {% endraw %}
         </small>
     </div>
@@ -83,6 +83,7 @@
         nav = new Vue({
             el: '#nav',
             data: {
+                DateTime: window.DateTime,
                 server_info: {},
             },
             methods: {

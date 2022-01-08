@@ -14,5 +14,5 @@ class DBAgeService:
         return datetime.fromtimestamp(
             self.updated_at,
             tz=tz.gettz(config('application.time_zone'))
-        ).strftime("%y/%m/%d %H:%M:%S")
+        ).strftime("%Y-%m-%dT%H:%M:%S%z")
 

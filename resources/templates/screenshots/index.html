@@ -27,7 +27,7 @@ Screenshots
         <div v-for="s in screenshots">
             <a v-bind:href="'/workspaces/' + workspace.key + '/papers/' + s.paper_key">
                     <small>{{ s.paper_title }}</small><br>
-                    <small>{{s.user.name}} {{ s.created_at.split("T")[0] }}</small><br>
+                    <small>{{s.user.name}} {{ DateTime.fromISO(s.created_at).toLocaleString(DateTime.DATETIME_FULL) }}</small><br>
                 <b-img thumbnail fluid v-lazy="'/uploads/' + s.file_name" style="margin-bottom: 80px; width: 50%;"></b-img>
             </a>
         </div>
@@ -46,6 +46,7 @@ Screenshots
             el: '#app',
             data() {
                 return {
+                    DateTime: window.DateTime,
                     workspace: workspace,
                     sort_randomly: true,
                     screenshots: [],
