@@ -15,17 +15,30 @@ class FullTextSearchController(Controller):
 
     def api_index(self, request: Request, workspaceService: WorkspaceService):
         search_terms = request.query('query').split(" ")
+        query_type = request.query('query_type')
 
-        collection_ids = workspaceService.get_collection_ids()
+        items = QueryBuilder().on('zotero').table('fulltextWords')
 
-        items = QueryBuilder().on('zotero').table('fulltextWords')\
-            .where_in('word', search_terms)\
+        for t in search_terms:
+            items.or_where('word', t)
+
+        items = items\
             .join('fulltextItemWords', 'fulltextWords.wordID', '=', 'fulltextItemWords.wordID')\
             .join('items', 'fulltextItemWords.itemID', '=', 'items.itemID')\
-            .join('itemAttachments', 'itemAttachments.itemID', '=', 'items.itemID')\
-            .get()
-        item_ids = [it['parentItemID'] for it in items]
+            .join('itemAttachments', 'itemAttachments.itemID', '=', 'items.itemID')
 
+        items = items.group_by('items.itemID').select_raw('*, COUNT(word) as word_count').get()
+
+        if query_type == 'and':
+            min_matches = len(search_terms)
+        elif query_type == 'or':
+            min_matches = 1
+        else:
+            raise Exception(f"Unknown query_type: '{query_type}'")
+
+        item_ids = [it['parentItemID'] for it in items if it['word_count'] == min_matches]
+
+        collection_ids = workspaceService.get_collection_ids()
         items = QueryBuilder().on('zotero').table("items") \
             .where_in('items.itemID', item_ids) \
             .right_join('deletedItems', 'items.itemID', '=', 'deletedItems.itemID', ) \

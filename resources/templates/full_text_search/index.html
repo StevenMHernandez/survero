@@ -33,6 +33,16 @@ Search
                v-model="query"
                @keyup.enter="reload">
 
+        Query Type:
+        <label style="margin-right: 10px">
+            <input type="radio" name="query_type" value="and" v-model="query_type" v-on:change="reload">
+            <em>And</em>
+        </label>
+        <label>
+            <input type="radio" name="query_type" value="or" v-model="query_type" v-on:change="reload">
+            <em>Or</em>
+        </label>
+
         <div v-if="alternatives.length > 0">
             Alternative Words:
             <div class="card bg-light">
@@ -98,32 +108,35 @@ Search
                     items: [],
                     tag_groups_to_hide: {},
                     alternatives: [],
-                    query: [],
+                    query: '',
+                    query_type: 'and',
                 }
             },
             methods: {
                 reload() {
-                    axios.get('/api/workspaces/' + workspace.key + '/search?query=' + this.query)
-                        .then(response => {
-                            this.items = response.data.map(it => {
-                                it['is_visible'] = true;
-                                return it
-                            });
-
-                            this.items.forEach(it => {
-                                it['tag_groups'].forEach(tg => {
-                                    if (!this.tag_groups_to_hide.hasOwnProperty(tg)) {
-                                        this.tag_groups_to_hide[tg] = false;
-                                    }
+                    if (this.query !== '') {
+                        axios.get('/api/workspaces/' + workspace.key + '/search?query=' + this.query + '&query_type=' + this.query_type)
+                            .then(response => {
+                                this.items = response.data.map(it => {
+                                    it['is_visible'] = true;
+                                    return it
                                 });
-                            });
 
-                            this.toggleItemVisibility();
-                        });
-                    axios.get('/api/workspaces/' + workspace.key + '/search/alternatives?query=' + this.query)
-                        .then(response => {
-                            this.alternatives = response.data;
-                        });
+                                this.items.forEach(it => {
+                                    it['tag_groups'].forEach(tg => {
+                                        if (!this.tag_groups_to_hide.hasOwnProperty(tg)) {
+                                            this.tag_groups_to_hide[tg] = false;
+                                        }
+                                    });
+                                });
+
+                                this.toggleItemVisibility();
+                            });
+                        axios.get('/api/workspaces/' + workspace.key + '/search/alternatives?query=' + this.query)
+                            .then(response => {
+                                this.alternatives = response.data;
+                            });
+                    }
                 },
                 addAlt(word) {
                     this.query += " " + word;
