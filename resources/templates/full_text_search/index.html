@@ -89,8 +89,6 @@ Search
     var app = null;
     workspace = {{ workspace|tojson }}
     window.onload = () => {
-        Vue.component('plotly', Plotly);
-
         app = new Vue({
             el: '#app',
             data() {
@@ -132,20 +130,16 @@ Search
                     this.reload();
                 },
                 itemShouldBeVisible(it) {
-                    console.log(it)
                     var should = !it.tag_groups.map(tg => {
                         return this.tag_groups_to_hide[tg]
                     }).reduce((x, y) => { return x || y }, false)
 
-                    console.log(should)
                     return should
                 },
                 toggleItemVisibility() {
                     for (var i = 0; i < this.items.length; i++) {
                         this.items[i]['is_visible'] = this.itemShouldBeVisible(this.items[i])
                     }
-
-                    console.log(this.items.map(it => it['is_visible']))
                 }
             },
         });
