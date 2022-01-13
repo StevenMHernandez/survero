@@ -14,7 +14,7 @@ class FullTextSearchController(Controller):
         return view.render("full_text_search.index", {'workspace': workspaceService.workspace})
 
     def api_index(self, request: Request, workspaceService: WorkspaceService):
-        search_terms = request.query('query').split(" ")
+        search_terms = request.query('query').lower().split(" ")
         query_type = request.query('query_type')
 
         items = QueryBuilder().on('zotero').table('fulltextWords')
@@ -71,7 +71,7 @@ class FullTextSearchController(Controller):
         return items
 
     def api_alternatives(self, request: Request):
-        search_terms = request.query('query').split(" ")
+        search_terms = request.query('query').lower().split(" ")
 
         alternatives = None
         for q in search_terms:
