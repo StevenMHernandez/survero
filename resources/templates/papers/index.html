@@ -18,6 +18,17 @@
         background: #e2e2e2;
         padding: 8px;
     }
+    .path:not(:first-child):before {
+        content: " > ";
+    }
+    .path {
+        color: #a9a9a9;
+        font-style: italic;
+    }
+    .path:last-child {
+        color: #636b6f;
+    }
+
 </style>
 {% endblock %}
 
@@ -50,7 +61,8 @@ Papers
         <div>
             <span class="text-success">{{ num_collections_completed() }} Collections Completed</span>,
             <span>{{ num_collections_in_progress() }} In Progress</span>,
-            <span class="text-danger">{{ num_collections_not_started() }} Not Started</span>.
+            <span class="text-danger">{{ num_collections_not_started() }} Not Started</span>,
+            <span class="text-muted">{{ num_collections_empty() }} Empty</span>.
         </div>
         <div>
             <label>Group by Collection? <input type="checkbox" v-model="group_by_collection"></label>
@@ -80,30 +92,26 @@ Papers
             </b-table>
         </div>
         <div v-if="group_by_collection">
-            <ul>
-                <li v-for="c in collections">
-                    <span v-bind:class="collectionClass(c)">
-                        <a v-bind:class="collectionClass(c)" v-bind:href="'#' + c.replace(/[^0-9a-z]/gi, '')">{{ c }}</a>
-                        (
-                        {{ items_per_collection[c].filter(x => !x.needs_review).length }}
-                        /
-                        {{ items_per_collection[c].length }}
-                        )
-                    </span>
-                </li>
-            </ul>
-            <div v-for="c in collections">
-                <h3 style="display: inline-block;" v-bind:id="c.replace(/[^0-9a-z]/gi, '')">{{ c }} ({{ items_per_collection[c].filter(x => x.num_tags > 0 || x.num_screenshots > 0 || x.num_notes > 0).length }} / {{ items_per_collection[c].length }})</h3>
+            <render-tree v-bind:tree="collection_tree"></render-tree>
 
-                <b-button v-b-toggle="'collapse-' + c.replace(/[^0-9a-z]/gi, '')" variant="light">Open Papers from Terminal</b-button>
-                <b-collapse v-bind:id="'collapse-' + c.replace(/[^0-9a-z]/gi, '')" class="mt-2">
-                        <textarea style="min-height: 200px; width: 100%;">{{ items_per_collection[c].filter(filterTable).map(p => "open \"" + APP_URL + paperUrl(p.key) + "\"\n").reduce((x,y) => x + y, '').trim() }}</textarea>
+            <div v-for="c in collections" v-if="c.items.length > 0" style="margin-bottom: 5em">
+                <div v-if="collectionFullPath[c.collectionID].length > 1">
+                    <small class="path" v-for="p in collectionFullPath[c.collectionID]">{{ p }}</small>
+                </div>
+                <h3 style="display: inline-block;" v-bind:id="c.collectionName.replace(/[^0-9a-z]/gi, '')">
+                    {{ c.collectionName }}
+                    ({{ c.items.filter(x => x.num_tags > 0 || x.num_screenshots > 0 || x.num_notes > 0).length }} / {{ c.items.length }})
+                </h3>
+
+                <b-button v-b-toggle="'collapse-' + c.collectionName.replace(/[^0-9a-z]/gi, '')" variant="light">Open Papers from Terminal</b-button>
+                <b-collapse v-bind:id="'collapse-' + c.collectionName.replace(/[^0-9a-z]/gi, '')" class="mt-2">
+                        <textarea style="min-height: 200px; width: 100%;">{{ c.items.filter(filterTable).map(p => "open \"" + APP_URL + paperUrl(p.key) + "\"\n").reduce((x,y) => x + y, '').trim() }}</textarea>
                 </b-collapse>
                 <b-table ref="table"
                          striped hover
                          :fields="fields"
                          :busy.sync="isBusy"
-                         :items="items_per_collection[c]"
+                         :items="c.items"
                          :sort-by.sync="sortBy"
                          :sort-desc.sync="sortDesc"
                          responsive="sm"
@@ -129,6 +137,53 @@ Papers
 {% endblock %}
 
 {% block script %}
+{#  @See: https://v3.vuejs.org/guide/migration/inline-template-attribute.html#_3-x-syntax  #}
+{% raw %}
+<script type="text/html" id="render-tree-template">
+  <ul>
+      <li v-for="c in tree" v-bind:key="c.collection.collectionID">
+          <div v-bind:class="collectionClass(c)">
+                <a v-if="c.collection.items.length > 0" v-bind:class="collectionClass(c)" v-bind:href="'#' + c.collection.collectionName.replace(/[^0-9a-z]/gi, '')">{{ c.collection.collectionName }}</a>
+                <span v-if="c.collection.items.length == 0">{{ c.collection.collectionName }}</span>
+                (
+                {{ c.collection.items.filter(x => !x.needs_review).length }}
+                /
+                {{ c.collection.items.length }}
+                )
+              <render-tree v-bind:tree="c.children"></render-tree>
+          </div>
+      </li>
+  </ul>
+</script>
+{% endraw %}
+
+<script>
+    var collectionClass = function(c) {
+        completed = c.items.filter(x => !x.needs_review).length;
+        total = c.items.length;
+        if (total == 0) {
+            return 'text-muted';
+        }
+        if (completed == total) {
+            return 'text-success';
+        }
+        if (completed == 0) {
+            return 'text-danger';
+        }
+        return 'text-dark';
+    };
+
+    Vue.component('render-tree', {
+        template: '#render-tree-template',
+        props: ['tree'],
+        methods: {
+            collectionClass(c) {
+                return window.collectionClass(c.collection);
+            },
+        }
+    });
+</script>
+
 <script>
     var app = null;
     APP_URL = {{ config('application.URL')|tojson }};
@@ -143,7 +198,9 @@ Papers
                     group_by_collection: true,
                     items: [],
                     collections: [],
-                    items_per_collection: {},
+                    child_collections: {},
+                    collection_tree: [],
+                    collectionFullPath: {},
                     isBusy: false,
                     sortBy: 'Title',
                     sortDesc: false,
@@ -174,35 +231,91 @@ Papers
                     axios.get(path)
                         .then(response => {
                             this.isBusy = false;
-                            this.items = response.data;
-                            this.collections = [...new Set(this.items.map((x) => x.collectionName))].sort();
+                            this.items = response.data['papers'];
+                            this.collections = response.data['collections'];
+
+                            var items_per_collection = {};
                             this.collections.forEach((c) => {
-                                this.items_per_collection[c] = [];
+                                items_per_collection[c.collectionName] = [];
                             });
                             this.items.forEach((x) => {
-                                this.items_per_collection[x.collectionName].push(x)
+                                items_per_collection[x.collectionName].push(x)
+                            });
+                            this.collections = this.collections.map(c => {
+                                c['items'] = items_per_collection[c.collectionName];
+                                return c;
+                            })
+
+                            this.collections.forEach(c => {
+                                if (!this.child_collections.hasOwnProperty(c.parentCollectionID)) {
+                                    this.child_collections[c.parentCollectionID] = []
+                                }
+                                this.child_collections[c.parentCollectionID].push(c)
+                                if (c.is_workspace) {
+                                    this.workspaces.push(c)
+                                }
+                            });
+
+
+                            let self = this
+                            function buildTree(parentCollectionID) {
+                                if (!self.child_collections.hasOwnProperty(parentCollectionID)) {
+                                    return [];
+                                }
+                                return self.child_collections[parentCollectionID].map(c => {
+                                    return {
+                                        collection: c,
+                                        children: buildTree(c.collectionID),
+                                    }
+                                })
+                            }
+
+                            this.collection_tree = buildTree(workspace.parentCollectionID);
+
+                            function sort_tree(tree) {
+                                sorted = tree.sort((c1, c2) => c1.collection['collectionName'] > c2.collection['collectionName'])
+                                sorted = sorted.map(t => {
+                                    t['children'] = sort_tree(t['children']);
+                                    return t
+                                })
+                                return sorted
+                            }
+                            this.collection_tree = sort_tree(this.collection_tree);
+
+
+                            this.collectionFullPath[workspace.parentCollectionID] = [];
+                            var stack = [this.collection_tree[0]]
+                            while (stack.length > 0) {
+                                c = stack.pop();
+                                children = c.children;
+                                c = c.collection;
+
+                                this.collectionFullPath[c.collectionID] = this.collectionFullPath[c.parentCollectionID].concat([c.collectionName])
+
+                                children.forEach(c => {
+                                    stack.push(c)
+                                });
+                            }
+
+                            this.collections.sort((a, b) => {
+                                return this.collectionFullPath[a.collectionID].join(">") > this.collectionFullPath[b.collectionID].join(">")
                             });
                         });
                 },
                 collectionClass(c) {
-                    completed = this.items_per_collection[c].filter(x => !x.needs_review).length;
-                    total = this.items_per_collection[c].length;
-                    if (completed == total) {
-                        return 'text-success';
-                    }
-                    if (completed == 0) {
-                        return 'text-danger';
-                    }
-                    return 'text-dark';
+                    return window.collectionClass(c);
                 },
                 num_collections_completed() {
                     return this.collections.filter(c => this.collectionClass(c) === 'text-success').length;
                 },
                 num_collections_in_progress() {
-                    return this.collections.filter(c => this.collectionClass(c) === '').length;
+                    return this.collections.filter(c => this.collectionClass(c) === 'text-dark').length;
                 },
                 num_collections_not_started() {
                     return this.collections.filter(c => this.collectionClass(c) === 'text-danger').length;
+                },
+                num_collections_empty() {
+                    return this.collections.filter(c => this.collectionClass(c) === 'text-muted').length;
                 },
                 paperUrl(key) {
                     path = '/workspaces/' + workspace.key + '/papers/' + key

@@ -21,6 +21,7 @@ class PapersController(Controller):
 
     def api_index(self, request: Request, workspaceService: WorkspaceService):
         items = workspaceService.get_papers()
+        collections = workspaceService.get_collections()
 
         tags = QueryBuilder().on('sqlite').table('tags').group_by('paper_key')
         if request.query('tag_group', False):
@@ -47,7 +48,10 @@ class PapersController(Controller):
 
         items = [add_additional_fields(r) for r in items]
 
-        return items
+        return {
+            'papers': items,
+            'collections': collections,
+        }
 
     def api_show(self, request: Request, workspaceServices: WorkspaceService):
         return workspaceServices.get_paper(request.param('key'))
