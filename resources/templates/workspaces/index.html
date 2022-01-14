@@ -112,12 +112,13 @@ Workspaces
             },
             methods: {
                 reload() {
-                    this.isBusy = true;
                     axios.get('/api/workspaces')
                         .then(response => {
-                            this.isBusy = false;
                             this.workspaces = [];
                             this.collections = response.data;
+                            this.child_collections = {};
+                            this.collection_tree = [];
+
                             this.collections.forEach(c => {
                                 if (!this.child_collections.hasOwnProperty(c.parentCollectionID)) {
                                     this.child_collections[c.parentCollectionID] = []
