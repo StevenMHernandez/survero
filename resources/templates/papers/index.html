@@ -41,10 +41,6 @@ Papers
     {% raw %}
     <div id="app" v-cloak>
         <div id="bottom_bar">
-            <button id="refresh" class="form-control" v-on:click="reload()" v-if="!isBusy">
-                Refresh
-            </button>
-            |
             <label>
                 <input type="checkbox" v-model="show_only_needs_review">
                 Show only <em>Needs Review</em>
@@ -233,6 +229,9 @@ Papers
                             this.isBusy = false;
                             this.items = response.data['papers'];
                             this.collections = response.data['collections'];
+                            this.child_collections = {};
+                            this.collection_tree = [];
+                            this.collectionFullPath = {};
 
                             var items_per_collection = {};
                             this.collections.forEach((c) => {
@@ -330,6 +329,14 @@ Papers
             },
             mounted() {
                 this.reload()
+            },
+            created() {
+                self = this;
+                document.addEventListener('visibilitychange', function() {
+                    if (!document.hidden) {
+                        self.reload()
+                    }
+                }, false);
             }
         });
     }
