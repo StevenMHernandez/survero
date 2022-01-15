@@ -107,6 +107,9 @@ class WorkspaceService:
             .order_by('orderIndex')\
             .get()
 
+        if not isinstance(item['authors'], list):
+            item['authors'] = []
+
         item['title'] = [x['value'] for x in item['metadata'] if x['fieldName'] == 'title'][0]
 
         item['screenshots'] = Screenshot.where('paper_key', '=', paper_key).with_('user').get().serialize()

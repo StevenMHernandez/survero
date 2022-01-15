@@ -33,6 +33,7 @@
                 {{ item.title }}
             </h1>
             <h5>
+                <span v-if="item.authors && item.authors.length == 0" class="text-warning">Warning: No Authors Found</span>
                 <span v-for="a,i in item.authors">
                     <span v-if="i>0">,</span>
                     <a v-bind:href="'/workspaces/' + workspace.key + '/authors/' + a.creatorID">
