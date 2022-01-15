@@ -30,7 +30,7 @@ Tags
         </ul>
 
         <div v-for="tg in tag_groups">
-            <h3 v-if="tg">
+            <h3 v-if="tg" style="margin-top: 5em;">
                 <a v-bind:href="filterByTagGroupUrl(tg)" v-bind:id="tg ? tg.replace(/[^a-z]/gi, '') : 'global_tag_group'">
                     {{ tg }}
                 </a>
@@ -138,6 +138,13 @@ Tags
                                         showgrid:false,
                                         range: [0, 100],
                                     },
+                                    yaxis2: {
+                                        title: 'PDF',
+                                        overlaying: 'y',
+                                        side: 'right',
+                                        showgrid:false,
+                                        range: [0, 100],
+                                    },
                                 }
                             });
                             this.tags.forEach((t) => {
@@ -174,18 +181,16 @@ Tags
                                     this.data[t.tag_group][0]['y'] = combined.map(it => it['y'])
                                     this.tags_per_group[t.tag_group] = combined.map(it => it['tag'])
 
+                                    total = combined.map(it => it['y']).reduce((a,b) => a + b)
                                     sorted_x = combined.map(it => it['x'])
-                                    sorted_y = combined.map(it => it['y']).reduce(function (l, curr) {
-                                        return l.concat([l[l.length - 1] + curr])
-                                    }, [0]).slice(1)
-                                    total = sorted_y[combined.length - 1]
-                                    sorted_y = sorted_y.map(x => 100 * x / total)
+                                    sorted_y_pdf = combined.map(it => 100 * it['y'] / total)
+                                    sorted_y_cdf = sorted_y_pdf.reduce((l, curr) => l.concat(l[l.length - 1] + curr), [0]).slice(1)
 
                                     this.data[t.tag_group] = [
                                         this.data[t.tag_group][0],
                                         {
                                             x: sorted_x,
-                                            y: sorted_y,
+                                            y: sorted_y_cdf,
                                             type: 'scatter',
                                             xaxis: 'x',
                                             yaxis: 'y2',
@@ -193,6 +198,17 @@ Tags
                                                 size: 1,
                                             },
                                             name: 'CDF',
+                                        },
+                                        {
+                                            x: sorted_x,
+                                            y: sorted_y_pdf,
+                                            type: 'scatter',
+                                            xaxis: 'x',
+                                            yaxis: 'y2',
+                                            xbins: {
+                                                size: 1,
+                                            },
+                                            name: 'PDF',
                                         },
                                     ]
                                 }
