@@ -5,6 +5,22 @@
     .sr-only {
         display: none;
     }
+    a.full_path {
+        text-decoration: none;
+    }
+    a.full_path:hover {
+        text-decoration: #a9a9a9 underline;
+    }
+    .path:not(:last-child):after {
+        content: " > ";
+    }
+    .path {
+        color: #a9a9a9;
+        font-style: italic;
+    }
+    .path:last-child {
+        color: #0d6efd;
+    }
 </style>
 {% endblock %}
 
@@ -20,8 +36,8 @@ Workspaces
         <strong>Your Workspaces:</strong>
         <ol>
             <li v-for="c in workspaces">
-                <a v-if="c.is_workspace" v-bind:href="'/workspaces/' + c.key + '/papers'">
-                    {{ c.collectionName }}
+                <a v-if="c.is_workspace" v-bind:href="'/workspaces/' + c.key + '/papers'" class="full_path">
+                    <span v-for="x in collectionFullPath[c.collectionID]" class="path">{{ x }}</span>
                   </a>
             </li>
         </ol>
@@ -108,6 +124,7 @@ Workspaces
                     collections: [],
                     child_collections: {},
                     collection_tree: [],
+                    collectionFullPath: {},
                 }
             },
             methods: {
@@ -118,6 +135,7 @@ Workspaces
                             this.collections = response.data;
                             this.child_collections = {};
                             this.collection_tree = [];
+                            this.collectionFullPath = {};
 
                             this.collections.forEach(c => {
                                 if (!this.child_collections.hasOwnProperty(c.parentCollectionID)) {
@@ -143,6 +161,24 @@ Workspaces
                             }
 
                             this.collection_tree = buildTree(null);
+
+                            this.collectionFullPath[null] = [];
+                            var stack = this.collection_tree.slice();
+                            while (stack.length > 0) {
+                                c = stack.pop();
+                                children = c.children;
+                                c = c.collection;
+
+                                this.collectionFullPath[c.collectionID] = this.collectionFullPath[c.parentCollectionID].concat([c.collectionName])
+
+                                children.forEach(c => {
+                                    stack.push(c)
+                                });
+                            }
+
+                            this.workspaces.sort((a, b) => {
+                                return this.collectionFullPath[a.collectionID].join(">") > this.collectionFullPath[b.collectionID].join(">")
+                            });
                         });
                 },
             },
