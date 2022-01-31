@@ -1,6 +1,6 @@
 ## Survero (Survey Web Application for Zotero)
 
-Steven M. Hernandez
+Created by: [Steven M. Hernandez](https://github.com/StevenMHernandez)
 
 ![Screenshot of Survero](figures/survero.png)
 
@@ -10,11 +10,10 @@ A special feature of zotero is that it produces a read-only `.sqlite` file which
 With this local database, I built a custom web application called **Survero** (survey+zotero) to make collecting notes, screenshots and search even easier!
 
 To use this tool, first you will need to add the `zotero.sqlite` file from your local system.
-There are two options for adding the `zotero.sqlite` file into the project. 
-**YOU** must decide which one is safest and most applicable to your unique situation.
+There are two options for adding the `zotero.sqlite` file into the project.
 
-1. Copy the file `cp /Users/your_name/Zotero/zotero.sqlite ./volumes/zotero/` (on Mac)
-2. Symlink `ln -s /Users/your_name/Zotero/zotero.sqlite ./volumes/zotero/` (on Mac)
+1. Manually copy the sqlite database `cp /Users/your_name/Zotero/zotero.sqlite ./volumes/zotero/` (on Mac)
+2. Setup a cronjob to automatically copy updates to zotero. Add the following to `crontab -e`: `* * * * * /usr/bin/rsync -u /Users/your_name/Zotero/zotero.sqlite /your/full/path/to/survero/volumes/zotero` (on Mac)
 
 Next, you will want to edit the `.env` file:
 
