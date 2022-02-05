@@ -100,6 +100,7 @@ Papers
                 </h3>
 
                 <b-button v-b-toggle="'collapse-' + c.collectionName.replace(/[^0-9a-z]/gi, '')" variant="light">Open Papers from Terminal</b-button>
+                <b-button variant="light" v-bind:href="downloadTableHref(c)" target="_blank" v-bind:download="downloadTableFileName(c)">Download Table</b-button>
                 <b-collapse v-bind:id="'collapse-' + c.collectionName.replace(/[^0-9a-z]/gi, '')" class="mt-2">
                         <textarea style="min-height: 200px; width: 100%;">{{ c.items.filter(filterTable).map(p => "open \"" + APP_URL + paperUrl(p.key) + "\"\n").reduce((x,y) => x + y, '').trim() }}</textarea>
                 </b-collapse>
@@ -326,6 +327,24 @@ Papers
                 filterTable(row, filter) {
                     return !this.show_only_needs_review || row.needs_review
                 },
+                downloadTableHref(collection) {
+                    csv = "item_id,key,title,collection_name,num_tags,num_screenshots,num_attachments,needs_review\n"
+                    collection.items.forEach(it => {
+                        csv += it.itemID + ",";
+                        csv += `"=HYPERLINK(""${window.location.origin}${window.location.pathname}/${it.key}"", ""${it.key}"")",`;
+                        csv += `"${it.title}",`;
+                        csv += `"${collection.collectionName}",`;
+                        csv += it.num_tags + ",";
+                        csv += it.num_screenshots + ",";
+                        csv += it.num_attachments + ",";
+                        csv += it.needs_review + "\n";
+                    })
+
+                    return 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+                },
+                downloadTableFileName(collection) {
+                    return this.collectionFullPath[collection.collectionID].join(" -- ") + ".csv"
+                }
             },
             mounted() {
                 this.reload()
