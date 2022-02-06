@@ -74,5 +74,9 @@ ROUTES = [
 
         Get("/api/workspaces/@workpace_key/search", "FullTextSearchController@api_index"),
         Get("/api/workspaces/@workpace_key/search/alternatives", "FullTextSearchController@api_alternatives"),
+
+        Get("/api/workspaces/@workpace_key/papers/@paper_key/bibtex", "BibtexController@api_get"),
+        Put("/api/workspaces/@workpace_key/papers/@paper_key/bibtex", "BibtexController@api_set"),
+        Get("/api/workspaces/@workpace_key/papers/@paper_key/bibtex/generate", "BibtexController@api_generate"),
     ], middleware=['auth']),
 ]

@@ -28,7 +28,10 @@
 
 <div id="app" v-cloak>
     <div class="container">
-        <div class="row">
+        <div class="row" v-if="!item.title">
+            <div>Loading...</div>
+        </div>
+        <div class="row" v-if="item.title">
             <h1>
                 {{ item.title }}
             </h1>
@@ -42,6 +45,10 @@
                 </span>
             </h5>
             <h6 class="text-muted" v-for="c in item.collections">(Collection: {{ c.collectionName }})</h6>
+            <div style="margin-bottom: 8px">
+                Actions:
+                <b-button v-on:click="showBibtexModal()" class="btn-sm" variant="primary">Cite: Bibtex</b-button>
+            </div>
             <div v-if="item.screenshots">
                 <div v-for="row in Math.ceil(item.screenshots.length / 3)">
                     <b-container fluid class="p-4 bg-dark">
@@ -130,6 +137,36 @@
         </div>
     </div>
     <vuefullscreenfiledrop @drop='addScreenshot'></vuefullscreenfiledrop>
+
+
+    <b-modal ref="bibtex-modal" hide-footer v-bind:title="bibtex.is_saving ? 'Bibtex (Saving...)' : 'Bibtex (Saved)'">
+        <textarea v-model="bibtex.value" class="form-control" style="margin-bottom: 16px; height: 250px;" placeholder="Bibtex is empty. Try generating bibtex or add it manually."></textarea>
+        <div v-if="bibtex.is_loading">
+            <p>Bibtex is Loading...</p>
+        </div>
+        <div v-if="!bibtex.is_loading">
+            <p v-if="bibtex.value.length == 0">
+                There is no Bibtex value for this paper.
+                If there is a DOI associated with the paper, try
+                <a href="#" v-on:click="generateBibtex()">generating the bibtex</a>.
+                Alternatively, you can manually write the bibtex value in the above text-area.
+                Changes made to this text-area will automatically save.
+            </p>
+            <p v-if="bibtex.value.length > 0">
+                Changes made to this text-area will automatically save.
+                You can <a href="#" v-on:click="generateBibtex()">re-generate the bibtex</a> if there is a DOI associated with this paper.
+            </p>
+            <p v-if="bibtex.error_message.length > 0" class="text-danger">
+                {{ bibtex.error_message }}
+            </p>
+            <p v-if="bibtex__value_simplified_format.indexOf(item__title_simplified_format) == -1 && bibtex.value.length > 0" class="text-danger">
+                It looks like the full title of the paper
+                <strong>"{{ item.title }}"</strong>
+                is not available in this Bibtex.
+                You may want to review the Bibtex content.
+            </p>
+        </div>
+    </b-modal>
 </div>
 {% endraw %}
 
@@ -159,6 +196,11 @@
                     newlyAddedTags: [],
                     deletedTags: [],
                     previouslyAddedTag: "",
+                    bibtex: {
+                        value: "",
+                        is_loading: true,
+                        is_saving: false,
+                    }
                 }
             },
             methods: {
@@ -180,7 +222,17 @@
                                     });
                                 });
                         });
-
+                    self.bibtex.is_loading = true;
+                    axios.get('/api/workspaces/' + workspace.key + '/papers/{{ item.key }}/bibtex')
+                        .then(response => {
+                            if (response.data.status === "success") {
+                                bibtex = response.data.model.bibtex;
+                                if (bibtex && bibtex.length > 0 && bibtex !== this.bibtex.value) {
+                                    this.bibtex.value = bibtex
+                                }
+                            }
+                            self.bibtex.is_loading = false;
+                        })
                 },
                 addScreenshot(formData, files) {
                     formData.set('paper_key', '{{ item.key }}');
@@ -315,6 +367,24 @@
                             'isPaperKey': !!x.match(reg) && ignore_list.indexOf(x.match(reg)[0]) < 0,
                         }
                     })
+                },
+                showBibtexModal() {
+                    this.$refs['bibtex-modal'].show();
+                },
+                generateBibtex() {
+                    self = this;
+                    this.bibtex.is_loading = true;
+                    axios.get('/api/workspaces/' + workspace.key + '/papers/{{ item.key }}/bibtex/generate')
+                        .then(response => {
+                            if (response.data.status === 'success') {
+                                this.bibtex.value = response.data.bibtex;
+                                self.bibtex.is_loading = false;
+                                this.bibtex.error_message = null;
+                            } else {
+                                this.bibtex.error_message = response.data.message;
+                                self.bibtex.is_loading = false;
+                            }
+                        })
                 }
             },
             mounted() {
@@ -336,6 +406,32 @@
                         self.addScreenshot(formData, e.clipboardData.files)
                     }
                 });
+            },
+            watch: {
+                "bibtex.value": _.debounce(function (newVal, oldVal) {
+                    if (!self.bibtex.is_loading) {
+                        self.bibtex.is_saving = true;
+                        axios({
+                            method: "put",
+                            url: '/api/workspaces/' + workspace.key + '/papers/{{ item.key }}/bibtex',
+                            data: {
+                                '__token': '{{ csrf_token }}',
+                                'paper_key': '{{ item.key }}',
+                                'bibtex': newVal,
+                            },
+                        }).then(response => {
+                            self.bibtex.is_saving = false;
+                        });
+                    }
+                }, 500)
+            },
+            computed: {
+                'bibtex__value_simplified_format': function () {
+                    return self.bibtex.value.replace(/[^0-9a-z\s]/gi, '').toLowerCase();
+                },
+                'item__title_simplified_format': function () {
+                    return self.item.title.replace(/[^0-9a-z\s]/gi, '').toLowerCase();
+                }
             }
         })
     }

@@ -1,4 +1,5 @@
 import Vue from 'vue'
+import _ from 'lodash'
 import { BootstrapVue, IconsPlugin } from 'bootstrap-vue'
 import axios from 'axios'
 import VueFullScreenFileDrop from 'vue-full-screen-file-drop';
@@ -9,6 +10,7 @@ Vue.use(BootstrapVue);
 Vue.use(IconsPlugin);
 
 window.Vue = Vue;
+window._ = _;
 window.axios = axios;
 window.VueFullScreenFileDrop = VueFullScreenFileDrop;
 window.VueTypeaheadBootstrap = VueTypeaheadBootstrap;
