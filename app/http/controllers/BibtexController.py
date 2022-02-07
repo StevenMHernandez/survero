@@ -49,7 +49,7 @@ class BibtexController(Controller):
         if len(doi) == 0:
             return {
                 'status': 'doi_not_found',
-                'message': 'Notice: A DOI was not found for this paper.'
+                'message': 'Notice: A DOI was not found in Zotero for this paper.'
             }
 
         doi = doi[0]

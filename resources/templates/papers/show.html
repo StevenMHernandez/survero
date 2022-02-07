@@ -156,7 +156,7 @@
                 Changes made to this text-area will automatically save.
                 You can <a href="#" v-on:click="generateBibtex()">re-generate the bibtex</a> if there is a DOI associated with this paper.
             </p>
-            <p v-if="bibtex.error_message.length > 0" class="text-danger">
+            <p v-if="bibtex.error_message" class="text-danger">
                 {{ bibtex.error_message }}
             </p>
             <p v-if="bibtex__value_simplified_format.indexOf(item__title_simplified_format) == -1 && bibtex.value.length > 0" class="text-danger">
@@ -200,6 +200,7 @@
                         value: "",
                         is_loading: true,
                         is_saving: false,
+                        error_message: null,
                     }
                 }
             },
