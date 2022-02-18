@@ -25,8 +25,8 @@ Co-Authorship Graph
 <!-- Load d3.js -->
 <script src="https://d3js.org/d3.v4.js"></script>
 <script>
-    var width = window.screen.width;
-    var height = window.screen.width;
+    var width = window.screen.width - 16;
+    var height = Math.max(300, window.screen.height - 350);
 
     workspace = {{ workspace|tojson }}
 

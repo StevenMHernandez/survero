@@ -380,10 +380,10 @@
                             if (response.data.status === 'success') {
                                 this.bibtex.value = response.data.bibtex;
                                 self.bibtex.is_loading = false;
-                                this.bibtex.error_message = null;
+                                self.bibtex.error_message = null;
                             } else {
-                                this.bibtex.error_message = response.data.message;
                                 self.bibtex.is_loading = false;
+                                self.bibtex.error_message = response.data.message;
                             }
                         })
                 }
@@ -422,6 +422,7 @@
                             },
                         }).then(response => {
                             self.bibtex.is_saving = false;
+                            self.bibtex.error_message = null;
                         });
                     }
                 }, 500)
