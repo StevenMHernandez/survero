@@ -11,6 +11,7 @@ from app.Screenshot import Screenshot
 
 class WorkspaceService:
     ITEM_DATA_FIELD__TITLE = 1
+    ITEM_DATA_FIELD__DATE = 6
     ITEM_TYPE__ATTACHMENT = 2
     CREATOR_TYPES__EDITOR = 10
     ITEM_DATA_FIELD__PUBLICATION_TITLE = 37
@@ -59,20 +60,40 @@ class WorkspaceService:
         items = QueryBuilder().on('zotero').table("items") \
             .right_join('deletedItems', 'items.itemID', '=', 'deletedItems.itemID', ) \
             .where_null('deletedItems.dateDeleted') \
-            .join('itemData', 'items.itemID', '=', 'itemData.itemID') \
-            .join('itemDataValues', 'itemData.valueID', '=', 'itemDataValues.valueID') \
             .join('collectionItems', 'items.itemID', '=', 'collectionItems.itemID') \
             .join('collections', 'collections.collectionID', '=', 'collectionItems.collectionID') \
             .join('itemAttachments', 'itemAttachments.parentItemId', '=', 'items.itemID') \
             .where('itemAttachments.contentType', '=', 'application/pdf') \
             .where_in('collectionItems.collectionID', collection_ids) \
-            .where('itemData.fieldID', '=', self.ITEM_DATA_FIELD__TITLE) \
             .where('itemTypeID', '!=', self.ITEM_TYPE__ATTACHMENT) \
             .group_by('items.itemID, collectionItems.collectionID') \
             .select_raw(
-            'items.itemID, items.key, itemDataValues.value as title, collections.collectionName, COUNT(itemAttachments.path) as num_attachments') \
+            'items.itemID, items.key, collections.collectionName, COUNT(itemAttachments.path) as num_attachments') \
             .order_by('title', 'asc') \
             .get()
+
+        item_data = QueryBuilder().on('zotero').table("itemData") \
+            .where_in('itemData.itemID', [it['itemID'] for it in items]) \
+            .join('itemDataValues', 'itemData.valueID', '=', 'itemDataValues.valueID') \
+            .join('fields', 'fields.fieldID', '=', 'itemData.fieldID') \
+            .select_raw('itemData.itemID, fields.fieldName as key, itemDataValues.value') \
+            .get()
+
+        item_data_dict = {}
+        for d in item_data:
+            itemID = d['itemID']
+            key = d['key']
+            value = d['value']
+            if itemID not in item_data_dict:
+                item_data_dict[itemID] = {}
+            item_data_dict[itemID][key] = value
+
+        def add_data(item):
+            item['data'] = item_data_dict.get(item['itemID'], {})
+            item['title'] = item['data'].get('title', 'TITLE_NOT_SET')
+            return item
+        items = [add_data(it) for it in items]
+
         return items
 
     def get_paper(self, paper_key):

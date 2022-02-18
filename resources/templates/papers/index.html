@@ -46,6 +46,9 @@ Papers
                 Show only <em>Needs Review</em>
             </label>
         </div>
+
+        <plotly :data="bar_data" :layout="bar_layout" v-if="bar_data[0].x.length > 0"></plotly>
+
         <div v-if="filter_by_tag_group">
             <strong>
             Filtering based on Tag Group: <em>{{ filter_by_tag_group }}</em>.
@@ -154,6 +157,7 @@ Papers
 </script>
 {% endraw %}
 
+<script src="/public/js/plotly.js"></script>
 <script>
     var collectionClass = function(c) {
         completed = c.items.filter(x => !x.needs_review).length;
@@ -179,6 +183,7 @@ Papers
             },
         }
     });
+    Vue.component('plotly', Plotly);
 </script>
 
 <script>
@@ -213,6 +218,26 @@ Papers
                         {key: 'num_attachments', sortable: true},
                         {key: 'needs_review', sortable: true}
                     ],
+                    bar_data: [
+                        {
+                            x: [],
+                            y: [],
+                            xaxis: 'x',
+                            yaxis: 'y',
+                            type: "bar",
+                            name: 'Count',
+                        },
+                    ],
+                    bar_layout: {
+                        xaxis: {
+                            title: 'Year',
+                            tickformat: 'd',
+                        },
+                        yaxis: {
+                            title: 'Count',
+                            showline: true,
+                        },
+                    }
                 }
             },
             methods: {
@@ -235,12 +260,28 @@ Papers
                             this.collectionFullPath = {};
 
                             var items_per_collection = {};
+                            var items_per_year = {};
                             this.collections.forEach((c) => {
                                 items_per_collection[c.collectionName] = [];
                             });
                             this.items.forEach((x) => {
                                 items_per_collection[x.collectionName].push(x)
+                                if (x.hasOwnProperty('data') && x['data'].hasOwnProperty('date')) {
+                                    year = null;
+                                    x['data']['date'].split(" ").forEach(s => {
+                                        _year = DateTime.fromISO(s).year;
+                                        if (_year) {
+                                            year = _year
+                                        }
+                                    })
+                                    if (!items_per_year.hasOwnProperty(year)) {
+                                        items_per_year[year] = 0
+                                    }
+                                    items_per_year[year]++;
+                                }
                             });
+                            this.bar_data[0].x = Object.keys(items_per_year)
+                            this.bar_data[0].y = Object.values(items_per_year)
                             this.collections = this.collections.map(c => {
                                 c['items'] = items_per_collection[c.collectionName];
                                 return c;
