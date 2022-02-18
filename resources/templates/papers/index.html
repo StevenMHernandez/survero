@@ -52,7 +52,7 @@ Papers
             </strong>
         </div>
         <div>
-            {{ items.filter(x => !x.needs_review).length }} / {{ items.length }} Papers. ({{ ((1 - (items.filter(x => !x.needs_review).length / items.length)) * 100).toFixed(2) }}% Remaining)
+            {{ items.filter(x => !x.needs_review).length }} / {{ items.length }} Papers. ({{ (((items.filter(x => !x.needs_review).length / items.length)) * 100).toFixed(2) }}% Completed)
         </div>
         <div>
             <span class="text-success">{{ num_collections_completed() }} Collections Completed</span>,
