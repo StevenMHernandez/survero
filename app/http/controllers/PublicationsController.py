@@ -19,8 +19,11 @@ class PublicationsController(Controller):
             .join('items', 'itemData.itemId', '=', 'items.itemID') \
             .join('collectionItems', 'items.itemID', '=', 'collectionItems.itemID') \
             .join('collections', 'collections.collectionID', '=', 'collectionItems.collectionID') \
-            .where_in('collectionItems.collectionID', collection_ids)\
-            .where('itemData.fieldID', '=', workspaceService.ITEM_DATA_FIELD__PUBLICATION_TITLE) \
+            .where_in('collectionItems.collectionID', collection_ids) \
+            .where_in('itemData.fieldID', [
+                workspaceService.ITEM_DATA_FIELD__PUBLICATION_TITLE,
+                workspaceService.ITEM_DATA_FIELD__CONFERENCE_NAME,
+            ]) \
             .group_by('value') \
             .select_raw('value as publicationTitle, COUNT(value) as count') \
             .get()
@@ -33,11 +36,15 @@ class PublicationsController(Controller):
         JOIN collections on collections.collectionID = collectionItems.collectionID
         JOIN itemData as ID1 on items.itemID = ID1.itemID
         JOIN itemData as ID2 on items.itemID = ID2.itemID
-        JOIN itemDataValues AS IDV1 on (ID1.valueID = IDV1.valueId and ID1.fieldID = ?)
+        JOIN itemDataValues AS IDV1 on (ID1.valueID = IDV1.valueId and ID1.fieldID IN (?,?))
         JOIN itemDataValues AS IDV2 on (ID2.valueID = IDV2.valueId and ID2.fieldID = ?)
         WHERE deletedItems.dateDeleted IS NULL
         ORDER BY IDV1.value;
-        """, [workspaceService.ITEM_DATA_FIELD__PUBLICATION_TITLE, workspaceService.ITEM_DATA_FIELD__TITLE])
+        """, [
+            workspaceService.ITEM_DATA_FIELD__PUBLICATION_TITLE,
+            workspaceService.ITEM_DATA_FIELD__CONFERENCE_NAME,
+            workspaceService.ITEM_DATA_FIELD__TITLE
+        ])
 
         papers = [p for p in papers if p['collectionID'] in collection_ids]
 

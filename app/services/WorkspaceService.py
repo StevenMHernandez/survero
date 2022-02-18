@@ -14,6 +14,7 @@ class WorkspaceService:
     ITEM_TYPE__ATTACHMENT = 2
     CREATOR_TYPES__EDITOR = 10
     ITEM_DATA_FIELD__PUBLICATION_TITLE = 37
+    ITEM_DATA_FIELD__CONFERENCE_NAME = 57
 
     def __init__(self, request: Request):
         self.request = request
