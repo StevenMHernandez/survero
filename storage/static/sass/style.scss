@@ -79,3 +79,7 @@ body > div:last-of-type {
 .nav li a {
     text-decoration: none;
 }
+
+.modal button {
+    border-radius: revert;
+}
