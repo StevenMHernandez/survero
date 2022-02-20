@@ -16,6 +16,9 @@
     .deletable {
         cursor: pointer;
     }
+    .input-group-typeahead input {
+        border-radius: 0;
+    }
 </style>
 {% endblock %}
 
@@ -64,21 +67,24 @@
                 </div>
             </div>
             <ul>
-                <li v-for="a in item.attachments">
-                    <b-input-group v-bind:prepend="a.key" class="mt-3">
-                        <b-form-input type="text" v-on:click="copy"
-                                      v-bind:value="'open ' + (a.path.replace('storage:', ''))">
-                        </b-form-input>
-                    </b-input-group>
+                <li v-for="a in item.attachments" style="list-style: none">
+                    <div class="input-group mt-3">
+                        <div class="input-group-prepend input-group-text">{{ a.key }}</div>
+                            <b-form-input type="text" v-on:click="copy"
+                                          v-bind:value="'open ' + (a.path.replace('storage:', ''))">
+                            </b-form-input>
+                    </div>
                 </li>
             </ul>
             <hr>
 
 
             <b-col>
-                <b-input-group prepend="Add a Tag" class="mt-3">
+                <div class="input-group mt-3">
+                    <div class="input-group-prepend input-group-text">Add a Tag</div>
 
                     <typeahead
+                            class="input-group-typeahead"
                             ref="typeahead"
                             v-model="new_tag_text"
                             v-bind:data="allTags"
@@ -87,10 +93,8 @@
                             @hit="addTag"
                             @keyup.enter="addTag">
                     </typeahead>
-                    <b-input-group-append>
-                        <b-button v-on:click="addTag">Create</b-button>
-                    </b-input-group-append>
-                </b-input-group>
+                    <b-button v-on:click="addTag" class="input-group-append">Create</b-button>
+                </div>
                 <ul>
                     <li v-for="t in item.tags">
                         <span v-bind:class="tagTextColor(t.tag)">
@@ -108,17 +112,16 @@
             </b-col>
 
             <b-col>
-                <b-input-group prepend="Add a Note" class="mt-3">
+                <div class="input-group mt-3">
+                    <div class="input-group-prepend input-group-text">Add a Note</div>
 
                     <input
                             class="form-control"
                             ref="typeahead"
                             v-model="new_note_text"
                             @keyup.enter="addNote"/>
-                    <b-input-group-append>
-                        <b-button v-on:click="addNote">Create</b-button>
-                    </b-input-group-append>
-                </b-input-group>
+                    <b-button v-on:click="addNote" class="input-group-append">Create</b-button>
+                </div>
                 <ul id="notes" v-if="item.notes && item.notes.length > 0">
                     <li v-for="n in item.notes.slice().reverse()">
                         <template v-for="v in splitNoteText(n.note)">
