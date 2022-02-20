@@ -11,6 +11,7 @@
         left: 0;
         background: #f3f3f3;
         padding: 8px;
+        z-index: 9999;
     }
     #bottom_bar button {
         display: inline;
@@ -47,7 +48,7 @@ Papers
             </label>
         </div>
 
-        <plotly :data="bar_data" :layout="bar_layout" v-if="bar_data[0].x.length > 0"></plotly>
+        <plotly :data="bar_data" :layout="bar_layout" v-if="bar_data[0].x.length > 0" v-on:click="barChartClick"></plotly>
 
         <div v-if="filter_by_tag_group">
             <strong>
@@ -131,6 +132,11 @@ Papers
                 </b-table>
             </div>
         </div>
+        <b-modal ref="my-modal" hide-footer v-bind:title="'Papers from ' + modal.year">
+            <b-list-group>
+                <b-list-group-item v-bind:href="'/workspaces/' + workspace.key + '/papers/' + p.key" v-for="p in modal.papers">{{ p.title }}</b-list-group-item>
+            </b-list-group>
+        </b-modal>
     </div>
     {% endraw %}
 </div>
@@ -207,6 +213,11 @@ Papers
                     sortBy: 'Title',
                     sortDesc: false,
                     show_only_needs_review: false,
+                    items_per_year: {},
+                    modal: {
+                        year: 0,
+                        papers: [],
+                    },
                     fields: [
                         {key: 'itemID', sortable: true},
                         {key: 'key', sortable: true},
@@ -260,7 +271,7 @@ Papers
                             this.collectionFullPath = {};
 
                             var items_per_collection = {};
-                            var items_per_year = {};
+                            this.items_per_year = {};
                             this.collections.forEach((c) => {
                                 items_per_collection[c.collectionName] = [];
                             });
@@ -274,14 +285,16 @@ Papers
                                             year = _year
                                         }
                                     })
-                                    if (!items_per_year.hasOwnProperty(year)) {
-                                        items_per_year[year] = 0
+                                    if (!this.items_per_year.hasOwnProperty(year)) {
+                                        this.items_per_year[year] = []
                                     }
-                                    items_per_year[year]++;
+                                    if (!this.items_per_year[year].map(p => p.title).includes(x.title)) {
+                                        this.items_per_year[year].push(x);
+                                    }
                                 }
                             });
-                            this.bar_data[0].x = Object.keys(items_per_year)
-                            this.bar_data[0].y = Object.values(items_per_year)
+                            this.bar_data[0].x = Object.keys(this.items_per_year)
+                            this.bar_data[0].y = Object.values(this.items_per_year).map(l => l.length)
                             this.collections = this.collections.map(c => {
                                 c['items'] = items_per_collection[c.collectionName];
                                 return c;
@@ -385,6 +398,11 @@ Papers
                 },
                 downloadTableFileName(collection) {
                     return this.collectionFullPath[collection.collectionID].join(" -- ") + ".csv"
+                },
+                barChartClick(data) {
+                    this.modal.year = data.points[0].x;
+                    this.modal.papers = this.items_per_year[this.modal.year];
+                    this.$refs['my-modal'].show();
                 }
             },
             mounted() {
