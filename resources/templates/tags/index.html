@@ -38,7 +38,7 @@ Tags
             <h3 v-if="!tg">[GLOBAL TAG GROUP]</h3>
             n_tags={{ tags_per_group[tg].map(t => t.num_tags).reduce((a, b) => a + b, 0) }}
 
-            <plotly :data="data[tg]" :layout="layout[tg]"></plotly>
+            <plotly :data="data[tg]" :layout="layout[tg]" v-on:click="function(data) {plotlyClick(data, tg)}"></plotly>
             <ol>
                 <li v-for="t in tags_per_group[tg]">
                     <span v-on:click="showModel(t.tag_id, t.tag)">
@@ -227,6 +227,12 @@ Tags
                         console.log(response, "response");
                         this.papers_per_tag = response['data']
                     });
+                },
+                plotlyClick(data, tg) {
+                    tag_value = data.points[0].x;
+                    full_tag_value = tg ? tg + ": " + tag_value : tag_value;
+                    tag_id = this.tags.filter(t => t.tag == full_tag_value)[0].tag_id;
+                    this.showModel(tag_id, tag_value);
                 },
                 updateTag() {
                     axios({
