@@ -54,7 +54,7 @@ class WorkspaceService:
             .get()
         return [it['key'] for it in items]
 
-    def get_papers(self):
+    def get_papers(self, group_by_collection_id=True):
         collection_ids = self.get_collection_ids()
 
         items = QueryBuilder().on('zotero').table("items") \
@@ -65,9 +65,14 @@ class WorkspaceService:
             .join('itemAttachments', 'itemAttachments.parentItemId', '=', 'items.itemID') \
             .where('itemAttachments.contentType', '=', 'application/pdf') \
             .where_in('collectionItems.collectionID', collection_ids) \
-            .where('itemTypeID', '!=', self.ITEM_TYPE__ATTACHMENT) \
-            .group_by('items.itemID, collectionItems.collectionID') \
-            .select_raw(
+            .where('itemTypeID', '!=', self.ITEM_TYPE__ATTACHMENT)
+
+        if group_by_collection_id:
+            items = items.group_by('items.itemID, collectionItems.collectionID')
+        else:
+            items = items.group_by('items.itemID')
+
+        items = items.select_raw(
             'items.itemID, items.key, collections.collectionName, COUNT(itemAttachments.path) as num_attachments') \
             .order_by('title', 'asc') \
             .get()

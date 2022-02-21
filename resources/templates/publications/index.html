@@ -20,12 +20,12 @@ Publications
     {% raw %}
     <div id="app" v-cloak>
         <div>
-            {{ publications.length }} Unique Publications.
+            {{ Object.keys(publications).length }} Unique Publications.
         </div>
         <b-table striped hover
                  :fields="fields"
                  :busy.sync="isBusy"
-                 :items="publications"
+                 :items="Object.entries(publications).map(publicationsToTable)"
                  :sort-by.sync="sortBy"
                  :sort-desc.sync="sortDesc"
                  responsive="sm">
@@ -34,9 +34,9 @@ Publications
                 </template>
         </b-table>
 
-        <b-modal ref="my-modal" hide-footer v-bind:title="selected_publication.title">
+        <b-modal ref="my-modal" hide-footer v-bind:title="selected_publication.publicationTitle">
             <b-list-group>
-                <b-list-group-item v-bind:href="'/workspaces/' + workspace.key + '/papers/' + p.key" v-for="p in papers" v-if="p.publication == selected_publication.title">{{ p.title }}</b-list-group-item>
+                <b-list-group-item v-bind:href="'/workspaces/' + workspace.key + '/papers/' + p.key" v-for="p in selected_publication.papers">{{ p.title }}</b-list-group-item>
             </b-list-group>
         </b-modal>
     </div>
@@ -64,7 +64,7 @@ Publications
                         {key: 'count', sortable: true},
                     ],
                     selected_publication: {
-                        'title': '',
+                        'publicationTitle': '',
                         'papers': [],
                     },
                 }
@@ -76,13 +76,19 @@ Publications
                         .then(response => {
                             this.isBusy = false;
                             this.publications = response.data.publications;
-                            this.papers = response.data.papers;
                         });
                 },
                 openModal(publicationTitle) {
-                    this.selected_publication.title = publicationTitle;
+                    this.selected_publication.publicationTitle = publicationTitle;
+                    this.selected_publication.papers = this.publications[publicationTitle];
                     this.$refs['my-modal'].show();
                 },
+                publicationsToTable(item) {
+                    return {
+                        publicationTitle: item[0],
+                        count: item[1].length
+                    }
+                }
             },
             mounted() {
                 this.reload()
