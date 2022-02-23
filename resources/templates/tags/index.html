@@ -132,6 +132,13 @@ Tags
                                         side: 'left',
                                     },
                                     yaxis2: {
+                                        title: 'PDF',
+                                        overlaying: 'y',
+                                        side: 'right',
+                                        showgrid:false,
+                                        range: [0, 100],
+                                    },
+                                    yaxis2: {
                                         title: 'CDF',
                                         overlaying: 'y',
                                         side: 'right',
@@ -139,7 +146,7 @@ Tags
                                         range: [0, 100],
                                     },
                                     yaxis2: {
-                                        title: 'PDF',
+                                        title: 'Inverse CDF',
                                         overlaying: 'y',
                                         side: 'right',
                                         showgrid:false,
@@ -185,9 +192,21 @@ Tags
                                     sorted_x = combined.map(it => it['x'])
                                     sorted_y_pdf = combined.map(it => 100 * it['y'] / total)
                                     sorted_y_cdf = sorted_y_pdf.reduce((l, curr) => l.concat(l[l.length - 1] + curr), [0]).slice(1)
+                                    sorted_y_inv_cdf = sorted_y_pdf.reduce((l, curr) => l.concat(l[l.length - 1] - curr), [100]).slice(0,-1)
 
                                     this.data[t.tag_group] = [
                                         this.data[t.tag_group][0],
+                                        {
+                                            x: sorted_x,
+                                            y: sorted_y_pdf,
+                                            type: 'scatter',
+                                            xaxis: 'x',
+                                            yaxis: 'y2',
+                                            xbins: {
+                                                size: 1,
+                                            },
+                                            name: 'PDF',
+                                        },
                                         {
                                             x: sorted_x,
                                             y: sorted_y_cdf,
@@ -201,14 +220,14 @@ Tags
                                         },
                                         {
                                             x: sorted_x,
-                                            y: sorted_y_pdf,
+                                            y: sorted_y_inv_cdf,
                                             type: 'scatter',
                                             xaxis: 'x',
                                             yaxis: 'y2',
                                             xbins: {
                                                 size: 1,
                                             },
-                                            name: 'PDF',
+                                            name: 'Inverse CDF',
                                         },
                                     ]
                                 }
