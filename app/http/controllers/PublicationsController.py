@@ -1,3 +1,5 @@
+import re
+
 from masonite.view import View
 from masonite.request import Request
 from masonite.controllers import Controller
@@ -21,6 +23,10 @@ class PublicationsController(Controller):
                                or p['data'].get('proceedingsTitle', False)
 
             if publication_name:
+                if 'arXiv' in publication_name:
+                    publication_name = 'arXiv'
+
+                publication_name = re.sub("[A-z]*[0-9]+[A-z]*", "", publication_name)
                 if publication_name not in publications:
                     publications[publication_name] = []
                 publications[publication_name].append(p)
